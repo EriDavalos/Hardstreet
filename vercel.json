@@ -1,8 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/:folder",
-      "destination": "/:folder/index.html"
+      "source": "/ReynaCoot",
+      "destination": "/ReynaCoot/"
     }
   ]
 }
