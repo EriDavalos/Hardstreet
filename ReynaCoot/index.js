@@ -153,7 +153,7 @@
     // ===== SHARE =====
     function shareWhatsApp() {
       const text = encodeURIComponent('¡Estás invitad@ a los XV años de Reyna! 🎀\nSábado 10 de Octubre 2026\nAbre la invitación para más detalles.');
-      window.open('https://wa.me/?text=' + text, '_blank');
+      window.open('https://wa.me/529994124233?text=' + text, '_blank');
     }
     function shareCopy() {
       navigator.clipboard.writeText(window.location.href).then(() => {
