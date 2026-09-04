@@ -260,24 +260,36 @@
       color: #8a6a65;
     }
 
-    /* Date capsule */
+    /* Date capsule (two-row, never wraps) */
     .date-capsule {
-      display: inline-flex; align-items: center; gap: 0.85rem;
+      display: inline-block;
       margin-top: 1.7rem;
-      padding: 0.55rem 1.6rem;
+      padding: 1rem 2rem 1.1rem;
       border: 1px solid rgba(160,92,88,0.55);
-      border-radius: 999px;
+      border-radius: 22px;
       background: rgba(255,255,255,0.5);
       box-shadow: 0 6px 18px rgba(160,92,88,0.12);
+      text-align: center;
     }
-    .dc-day { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 0.95rem; letter-spacing: 3px; color: #5a3f3b; }
+    .dc-day {
+      display: flex; align-items: center; justify-content: center; gap: 0.8rem;
+      font-family: 'Cormorant Garamond', serif; font-weight: 600;
+      font-size: 0.92rem; letter-spacing: 6px; color: #5a3f3b;
+      white-space: nowrap;
+    }
+    .dc-flourish { font-size: 0.6rem; color: #c98a5e; letter-spacing: 0; }
+    .dc-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.85rem; margin-top: 0.55rem; white-space: nowrap;
+    }
     .dc-circle {
-      width: 44px; height: 44px;
+      width: 46px; height: 46px;
       border-radius: 50%;
       background: linear-gradient(135deg, #d9a95e, #b8915a);
       color: #fff;
       font-family: 'Playfair Display', serif;
-      font-weight: 700; font-size: 1.3rem;
+      font-weight: 700; font-size: 1.35rem;
+      line-height: 1;
       display: inline-flex; align-items: center; justify-content: center;
       box-shadow: 0 4px 12px rgba(184,145,90,0.4);
       animation: glowPulse 3s ease-in-out infinite;
@@ -286,7 +298,12 @@
       0%, 100% { box-shadow: 0 4px 12px rgba(184,145,90,0.4); }
       50% { box-shadow: 0 4px 22px rgba(217,169,94,0.75); }
     }
-    .dc-rest { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 0.95rem; letter-spacing: 3px; color: #5a3f3b; }
+    .dc-rest {
+      font-family: 'Cormorant Garamond', serif; font-weight: 600;
+      font-size: 0.95rem; letter-spacing: 3px; color: #5a3f3b;
+      white-space: nowrap;
+    }
+    .dc-rest .dc-dot { color: #c98a5e; margin: 0 0.2rem; }
 
     /* Tiara */
     .tiara { width: 92px; margin: 1.5rem auto 0; color: #b8915a; display: block; animation: floatGentle 3.5s ease-in-out infinite; }
@@ -605,6 +622,32 @@
       user-select: none;
     }
 
+    /* ===== MUSIC TOGGLE ===== */
+    #bg-music { display: none; }
+    .music-btn {
+      position: fixed;
+      right: 16px; bottom: 16px;
+      z-index: 1000;
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      border: 1px solid rgba(183,110,121,0.4);
+      background: rgba(255,255,255,0.85);
+      color: #b76e79;
+      font-size: 1.25rem;
+      display: none;
+      align-items: center; justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 8px 22px rgba(120,60,55,0.28);
+      transition: transform 0.3s ease, background 0.3s ease;
+      backdrop-filter: blur(4px);
+    }
+    .music-btn:hover { transform: scale(1.1); background: #fff; }
+    .music-btn.playing { animation: pulseTone 2.4s ease-in-out infinite; }
+    @keyframes pulseTone {
+      0%, 100% { box-shadow: 0 8px 22px rgba(120,60,55,0.28); }
+      50% { box-shadow: 0 8px 26px rgba(183,110,121,0.5); }
+    }
+
     /* ===== CONFETTI ===== */
     .confetti-piece {
       position: fixed; z-index: 999;
@@ -628,9 +671,11 @@
       .families-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 380px) {
-      .date-capsule { gap: 0.55rem; padding: 0.5rem 1rem; }
-      .dc-day, .dc-rest { letter-spacing: 1.5px; font-size: 0.85rem; }
-      .dc-circle { width: 38px; height: 38px; font-size: 1.1rem; }
+      .date-capsule { padding: 0.85rem 1.3rem 1rem; }
+      .dc-day { font-size: 0.85rem; letter-spacing: 4px; gap: 0.6rem; }
+      .dc-rest { font-size: 0.88rem; letter-spacing: 2px; }
+      .dc-row { gap: 0.6rem; }
+      .dc-circle { width: 40px; height: 40px; font-size: 1.15rem; }
       .polaroids { gap: 0.7rem; }
     }
     @media (prefers-reduced-motion: reduce) {
@@ -860,9 +905,11 @@
             <h1 class="main-name">Reyna</h1>
             <p class="invite-sub">Estás invitad@ a celebrar conmigo</p>
             <div class="date-capsule">
-              <span class="dc-day">SÁBADO</span>
-              <span class="dc-circle">10</span>
-              <span class="dc-rest">OCTUBRE · 2026</span>
+              <span class="dc-day"><span class="dc-flourish">✦</span>SÁBADO<span class="dc-flourish">✦</span></span>
+              <div class="dc-row">
+                <span class="dc-circle">10</span>
+                <span class="dc-rest">OCTUBRE<span class="dc-dot">·</span>2026</span>
+              </div>
             </div>
           </div>
         </div>
@@ -870,9 +917,9 @@
         <svg class="tiara" viewBox="0 0 60 44"><use href="#tiara" /></svg>
 
         <div class="polaroids">
-          <figure class="polaroid p1"><img src="../images/after_p.jpg" alt="Reyna" /></figure>
-          <figure class="polaroid p2"><img src="../images/IMG_9686-Enhanced-NR.jpg" alt="Reyna" /></figure>
-          <figure class="polaroid p3"><img src="../images/IMG_5873-Mejorado-NR.jpg" alt="Reyna" /></figure>
+          <figure class="polaroid p1"><img src="images/photo1.jpeg" alt="Reyna" /></figure>
+          <figure class="polaroid p2"><img src="images/photo2.jpeg" alt="Reyna" /></figure>
+          <figure class="polaroid p3"><img src="images/photo3.jpeg" alt="Reyna" /></figure>
         </div>
 
         <div class="quote-box">
@@ -1064,10 +1111,12 @@
         <div class="share-btn" onclick="shareWhatsApp()" title="Compartir por WhatsApp">💬</div>
         <div class="share-btn" onclick="shareCopy()" title="Copiar enlace">🔗</div>
       </div>
-      <div class="footer-watermark">Reyna</div>
     </div>
 
   </div>
+
+  <audio id="bg-music" src="Audio.mp3" preload="auto" loop></audio>
+  <button class="music-btn" id="music-btn" onclick="toggleMusic()" title="Música" aria-label="Reproducir o pausar música">🎵</button>
 
   <script>
     // ===== OPEN INVITATION =====
@@ -1077,6 +1126,7 @@
       envelope.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
       envelope.style.opacity = '0';
       envelope.style.transform = 'scale(0.95)';
+      startMusic();
       setTimeout(() => {
         envelope.style.display = 'none';
         invitation.classList.add('open');
@@ -1085,6 +1135,31 @@
         startCountdown();
         burstConfetti();
       }, 600);
+    }
+
+    // ===== MUSIC =====
+    function startMusic() {
+      const audio = document.getElementById('bg-music');
+      const btn = document.getElementById('music-btn');
+      if (btn) btn.style.display = 'flex';
+      if (!audio) return;
+      audio.volume = 0.55;
+      audio.play().then(() => {
+        if (btn) btn.classList.add('playing');
+      }).catch(() => {});
+    }
+    function toggleMusic() {
+      const audio = document.getElementById('bg-music');
+      const btn = document.getElementById('music-btn');
+      if (!audio) return;
+      if (audio.paused) {
+        audio.play().then(() => {
+          if (btn) { btn.classList.add('playing'); btn.textContent = '🎵'; }
+        }).catch(() => {});
+      } else {
+        audio.pause();
+        if (btn) { btn.classList.remove('playing'); btn.textContent = '🔇'; }
+      }
     }
 
     // ===== SCROLL REVEAL =====
