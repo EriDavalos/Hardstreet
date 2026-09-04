@@ -146,7 +146,7 @@
       const rect = event && event.currentTarget ? event.currentTarget.getBoundingClientRect() : null;
       burstConfetti(rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : null);
       setTimeout(() => {
-        window.open('https://wa.me/?text=' + msg, '_blank');
+        window.open('https://wa.me/529994124233?text=' + msg, '_blank');
       }, 450);
     }
 
