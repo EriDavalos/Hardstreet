@@ -142,12 +142,90 @@
 
     // ===== RSVP VIA WHATSAPP =====
     function confirmarAsistencia(event) {
+      if (window.__rsvpBusy) return;
+      window.__rsvpBusy = true;
+
       const msg = encodeURIComponent('¡Hola! 🎀 Quiero confirmar mi asistencia a los XV años de Reyna. Sábado 10 de Octubre 2026');
+      const url = 'https://wa.me/529994124233?text=' + msg;
       const rect = event && event.currentTarget ? event.currentTarget.getBoundingClientRect() : null;
       burstConfetti(rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : null);
+      prettyBurst(window.innerWidth / 2, window.innerHeight * 0.42);
+
+      const overlay = document.getElementById('thanks-overlay');
+      if (overlay) {
+        overlay.classList.remove('show');
+        void overlay.offsetWidth;
+        overlay.classList.add('show');
+        document.body.classList.add('no-scroll');
+      }
+
       setTimeout(() => {
-        window.open('https://wa.me/529994124233?text=' + msg, '_blank');
-      }, 450);
+        if (overlay) {
+          overlay.classList.remove('show');
+          document.body.classList.remove('no-scroll');
+        }
+      }, 2500);
+
+      setTimeout(() => {
+        window.__rsvpBusy = false;
+        // Intentar en pestaña nueva; si el navegador bloquea el popup, abrir WhatsApp en esta misma pestaña
+        let win = null;
+        try { win = window.open(url, '_blank'); } catch (e) { win = null; }
+        if (!win || win.closed) {
+          window.location.href = url;
+        }
+      }, 3100);
+    }
+
+    // Pretty celebratory burst (hearts, sparkles, petals, confetti)
+    function prettyBurst(x, y) {
+      const colors = ['#d9a95e', '#b76e79', '#e0b060', '#c98a5e', '#8b5a5b', '#f0d9d5'];
+      const fly = (el) => {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 140 + Math.random() * 230;
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        el.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+        el.style.setProperty('--dy', (Math.sin(angle) * dist - 70) + 'px');
+        el.style.setProperty('--rot', (Math.random() * 540 - 270) + 'deg');
+        el.style.setProperty('--sc', (0.8 + Math.random() * 0.7).toFixed(2));
+        el.style.setProperty('--dur', (1.5 + Math.random() * 0.9) + 's');
+        el.style.setProperty('--del', (Math.random() * 0.18).toFixed(2) + 's');
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3200);
+      };
+      // rose hearts
+      for (let i = 0; i < 14; i++) {
+        const s = document.createElement('span');
+        s.className = 'pretty-piece pretty-heart' + (i % 2 ? ' alt' : '');
+        s.textContent = '♥';
+        s.style.fontSize = (14 + Math.random() * 14) + 'px';
+        fly(s);
+      }
+      // golden sparkles
+      for (let i = 0; i < 16; i++) {
+        const s = document.createElement('span');
+        s.className = 'pretty-piece pretty-spark';
+        s.textContent = '✦';
+        s.style.fontSize = (13 + Math.random() * 13) + 'px';
+        fly(s);
+      }
+      // petals
+      for (let i = 0; i < 10; i++) {
+        const s = document.createElement('span');
+        s.className = 'pretty-piece pretty-petal';
+        s.style.width = s.style.height = (11 + Math.random() * 11) + 'px';
+        fly(s);
+      }
+      // confetti rects
+      for (let i = 0; i < 16; i++) {
+        const s = document.createElement('span');
+        s.className = 'pretty-piece pretty-confetti';
+        s.style.background = colors[i % colors.length];
+        s.style.width = (6 + Math.random() * 6) + 'px';
+        s.style.height = (4 + Math.random() * 5) + 'px';
+        fly(s);
+      }
     }
 
     // ===== SHARE =====
