@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cumpleaños · El Fede</title>
+  <meta name="description" content="Domingo 2 de la tarde · Te invito a mi cumpleaños estilo barbero. ¡Confirmate!" />
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cinzel:wght@400;600;700;900&family=Caveat:wght@500;600;700&family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./index.css" />
+</head>
+<body>
+
+  <!-- SVG line-art library (barber theme) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <!-- barber pole -->
+      <g id="pole" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M 14 2 H 30" />
+        <path d="M 17 6 C 17 3 27 3 27 6 L 26 10 H 18 Z" />
+        <rect x="17.5" y="10" width="9" height="38" rx="3" />
+        <path d="M 18 16 C 22 14 22 20 26 18" />
+        <path d="M 18 25 C 22 23 22 29 26 27" />
+        <path d="M 18 34 C 22 32 22 38 26 36" />
+        <path d="M 18 43 C 22 41 22 47 26 45" />
+        <path d="M 14 52 H 30" />
+        <path d="M 20 56 H 24 L 25 60 H 19 Z" />
+      </g>
+      <!-- scissors -->
+      <g id="scissors" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M 20 8 L 36 40" />
+        <path d="M 36 8 L 20 40" />
+        <path d="M 18.5 43 L 19 39" />
+        <path d="M 37.5 43 L 37 39" />
+        <circle cx="18" cy="49" r="6" />
+        <circle cx="38" cy="49" r="6" />
+        <circle cx="28" cy="30" r="1.6" fill="currentColor" stroke="none" />
+      </g>
+      <!-- straight razor -->
+      <g id="razor" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M 14 44 L 40 18 L 46 24 L 20 50 Z" />
+        <path d="M 40 18 L 46 12 L 52 18 L 46 24" />
+        <path d="M 14 44 C 10 40 8 42 6 46 C 4 50 8 54 12 52 C 16 50 18 48 14 44 Z" />
+        <path d="M 20 50 L 16 54" />
+      </g>
+      <!-- crown (graffiti) -->
+      <g id="crown" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M 6 34 L 4 12 L 16 22 L 24 6 L 32 22 L 44 12 L 42 34 Z" />
+        <path d="M 6 38 H 42" />
+        <circle cx="24" cy="2.5" r="2" fill="currentColor" stroke="none" />
+      </g>
+      <!-- hot towel bowl (pozolito) -->
+      <g id="bowl" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M 8 26 H 44 C 44 38 36 44 26 44 C 16 44 8 38 8 26 Z" />
+        <path d="M 4 26 H 48" />
+        <path d="M 18 18 C 16 14 20 12 18 8" />
+        <path d="M 26 18 C 24 14 28 12 26 8" />
+        <path d="M 34 18 C 32 14 36 12 34 8" />
+      </g>
+      <!-- gift box -->
+      <g id="gift" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="8" y="22" width="36" height="26" rx="2" />
+        <path d="M 6 14 H 46 V 22 H 6 Z" />
+        <path d="M 26 14 V 48" />
+        <path d="M 26 14 C 20 4 10 8 14 13 C 17 16 22 14 26 14 Z" />
+        <path d="M 26 14 C 32 4 42 8 38 13 C 35 16 30 14 26 14 Z" />
+      </g>
+      <!-- hair clipper -->
+      <g id="clipper" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M 16 24 L 40 24 L 40 44 C 40 48 36 50 28 50 C 20 50 16 48 16 44 Z" />
+        <path d="M 16 24 L 12 14 L 44 14 L 40 24" />
+        <path d="M 12 14 L 16 10 H 40 L 44 14" />
+        <path d="M 20 24 V 48 M 28 24 V 50 M 36 24 V 48" />
+      </g>
+      <!-- brush stroke swoosh (filled) -->
+      <g id="swoosh" fill="currentColor" stroke="none">
+        <path d="M 4 10 C 40 2 160 0 240 4 C 250 4.5 252 9 240 11 C 150 16 40 18 8 14 C 2 13 0 11 4 10 Z" />
+      </g>
+      <!-- divider: pole + scissors -->
+      <g id="divider" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <path d="M 10 14 H 92" />
+        <path d="M 164 14 H 246" />
+        <use href="#scissors" transform="translate(112 2) scale(0.5)" />
+        <circle cx="106" cy="14" r="1.6" fill="currentColor" stroke="none" />
+        <circle cx="150" cy="14" r="1.6" fill="currentColor" stroke="none" />
+      </g>
+    </defs>
+  </svg>
+
+  <!-- ENVELOPE COVER -->
+  <div class="cover" id="cover" onclick="openInvite()">
+    <div class="cover-grain"></div>
+    <div class="cover-vignette"></div>
+    <div class="barber-stripes bs-c1"></div>
+    <div class="barber-stripes bs-c2"></div>
+    <svg class="cover-scissors" viewBox="0 0 56 58"><use href="#scissors" /></svg>
+    <div class="cover-content">
+      <svg class="cover-crown" viewBox="0 0 48 44"><use href="#crown" /></svg>
+      <p class="cover-kicker">Tienes una invitación</p>
+      <h1 class="cover-name split">EL FEDE</h1>
+      <svg class="cover-swoosh" viewBox="0 0 256 20"><use href="#swoosh" /></svg>
+      <p class="cover-sub">Corte fino · Buenas historias</p>
+      <p class="cover-tap">Toca para abrir <span class="tap-blade">✂</span></p>
+    </div>
+  </div>
+
+  <!-- INVITATION -->
+  <div class="invitation" id="invitation">
+
+    <!-- ===== HERO ===== -->
+    <header class="section hero">
+      <div class="hero-photo-wrap">
+        <img class="hero-photo" src="./images/photo1.jpeg" alt="El cumpleañero" />
+        <div class="hero-shade"></div>
+      </div>
+
+      <div class="barber-stripes bs-hero"></div>
+      <svg class="hero-chalk c1" viewBox="0 0 48 44"><use href="#crown" /></svg>
+      <div class="dust" id="hero-dust"></div>
+      <svg class="hero-clipper" viewBox="0 0 56 58"><use href="#clipper" /></svg>
+
+      <div class="hero-content">
+        <p class="hero-kicker">Te invito a mi</p>
+        <h2 class="hero-title split">Cumpleaños</h2>
+        <svg class="hero-swoosh" viewBox="0 0 256 20"><use href="#swoosh" /></svg>
+
+        <ul class="hero-list">
+          <li class="hero-item">
+            <svg class="hero-ico" viewBox="0 0 44 64"><use href="#pole" /></svg>
+            <div><b>DOMINGO</b><span>2 de la tarde</span></div>
+          </li>
+          <li class="hero-item">
+            <svg class="hero-ico" viewBox="0 0 52 52"><use href="#bowl" /></svg>
+            <div><b>A almorzar</b><span>Rico pozolito</span></div>
+          </li>
+          <li class="hero-item">
+            <svg class="hero-ico" viewBox="0 0 52 54"><use href="#gift" /></svg>
+            <div><b>Traer regalos caros</b><span>arriba de <i class="hero-price">$3,000</i></span></div>
+          </li>
+        </ul>
+
+        <p class="hero-espero">¡Los espero!</p>
+      </div>
+
+      <svg class="hero-scissors-right" viewBox="0 0 56 58"><use href="#scissors" /></svg>
+      <p class="hero-chalk-quote">Fade culture · more than a cut <svg class="mini-crown" viewBox="0 0 48 44"><use href="#crown" /></svg></p>
+    </header>
+
+    <!-- ===== MARQUEE ===== -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span>BUENA COMPAÑIA <i>✂</i> CORTES <i>✂</i> GRANDES HISTORIAS <i>✂</i> RICO POZOLITO <i>✂</i> FADE CULTURE <i>✂</i> GOOD VIBES <i>✂</i></span>
+        <span>BUENA COMPAÑIA <i>✂</i> CORTES <i>✂</i> GRANDES HISTORIAS <i>✂</i> RICO POZOLITO <i>✂</i> FADE CULTURE <i>✂</i> GOOD VIBES <i>✂</i></span>
+      </div>
+    </div>
+
+    <!-- ===== COUNTDOWN ===== -->
+    <section class="section countdown-section">
+      <p class="cd-kicker reveal-zoom">Faltan</p>
+      <div class="cd-box reveal-zoom">
+        <div class="cd-item"><span class="cd-num" id="days">--</span><span class="cd-label">Días</span></div>
+        <span class="cd-sep">:</span>
+        <div class="cd-item"><span class="cd-num" id="hours">--</span><span class="cd-label">Horas</span></div>
+        <span class="cd-sep">:</span>
+        <div class="cd-item"><span class="cd-num" id="minutes">--</span><span class="cd-label">Min</span></div>
+        <span class="cd-sep">:</span>
+        <div class="cd-item"><span class="cd-num" id="seconds">--</span><span class="cd-label">Seg</span></div>
+      </div>
+      <p class="cd-date">Domingo · 2:00 PM</p>
+    </section>
+
+    <!-- ===== DETALLES ===== -->
+    <section class="section details-section">
+      <span class="sec-eyebrow reveal-zoom">Todo listo</span>
+      <h3 class="sec-title reveal-zoom">La cita</h3>
+      <svg class="sec-divider reveal-zoom" viewBox="0 0 256 30"><use href="#divider" /></svg>
+      <div class="cards">
+        <article class="card reveal-l">
+          <svg class="card-ico" viewBox="0 0 44 64"><use href="#pole" /></svg>
+          <h4>¿Dónde?</h4>
+          <p class="card-main">La Barbería</p>
+          <p class="card-sub">Calle del Arte 123 · Centro</p>
+          <a class="btn" href="https://maps.google.com" target="_blank" rel="noopener">Ver ubicación</a>
+        </article>
+        <article class="card reveal-r">
+          <svg class="card-ico" viewBox="0 0 56 58"><use href="#razor" /></svg>
+          <h4>Dress code</h4>
+          <p class="card-main">Barbero Chic</p>
+          <p class="card-sub">Negro, blanco y un toque rojo. Vengan bien peinados.</p>
+        </article>
+        <article class="card reveal-l">
+          <svg class="card-ico" viewBox="0 0 52 54"><use href="#gift" /></svg>
+          <h4>Regalo</h4>
+          <p class="card-main">Lluvia de sobres</p>
+          <p class="card-sub">Arriba de $3,000… ¡se acepta en efectivo, dólares o transferencia! 💵</p>
+        </article>
+        <article class="card reveal-r">
+          <svg class="card-ico" viewBox="0 0 52 52"><use href="#bowl" /></svg>
+          <h4>El menu</h4>
+          <p class="card-main">Pozolito</p>
+          <p class="card-sub">Rico, caliente y con todo. Buenas historias incluidas.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===== ITINERARIO ===== -->
+    <section class="section timeline-section">
+      <span class="sec-eyebrow reveal-zoom">Así va la fiesta</span>
+      <h3 class="sec-title reveal-zoom">Itinerario</h3>
+      <svg class="sec-divider reveal-zoom" viewBox="0 0 256 30"><use href="#divider" /></svg>
+      <div class="timeline">
+        <div class="t-item reveal-l"><span class="t-dot"></span><p class="t-time">2:00 PM</p><p class="t-event">Llegada y welcome</p></div>
+        <div class="t-item reveal-l"><span class="t-dot"></span><p class="t-time">2:30 PM</p><p class="t-event">Cortes de cortesía</p></div>
+        <div class="t-item reveal-l"><span class="t-dot"></span><p class="t-time">3:30 PM</p><p class="t-event">Pozolito</p></div>
+        <div class="t-item reveal-l"><span class="t-dot"></span><p class="t-time">4:30 PM</p><p class="t-event">Brindis y pastel</p></div>
+        <div class="t-item reveal-l"><span class="t-dot"></span><p class="t-time">6:00 PM</p><p class="t-event">Fotos y despedida</p></div>
+      </div>
+    </section>
+
+    <!-- ===== RSVP ===== -->
+    <section class="section rsvp-section">
+      <svg class="rsvp-scissors" viewBox="0 0 56 58"><use href="#scissors" /></svg>
+      <span class="sec-eyebrow reveal-zoom">No faltes</span>
+      <h3 class="sec-title neon-title reveal-zoom">Confirma tu silla</h3>
+      <svg class="sec-divider reveal-zoom" viewBox="0 0 256 30"><use href="#divider" /></svg>
+      <p class="rsvp-text reveal">Reserva tu lugar en la barbera antes del viernes. ¡Los espero!</p>
+      <button class="btn big reveal-zoom" onclick="confirmarAsistencia(event)">Confirmar asistencia</button>
+      <p class="rsvp-chalk">Good hair, better people <svg class="mini-crown" viewBox="0 0 48 44"><use href="#crown" /></svg></p>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="section footer">
+      <svg class="footer-pole pole" viewBox="0 0 44 64"><use href="#pole" /></svg>
+      <p class="footer-name">EL FEDE</p>
+      <p class="footer-msg">Barber life, good vibes. Nos vemos el domingo.</p>
+      <div class="footer-credit">
+        <span class="fc-text">Invitación hecha con amor por</span>
+        <a class="fc-brand" href="../index.html" title="Ir a la página principal">Hardstreet</a>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- THANKS OVERLAY -->
+  <div class="thanks-overlay" id="thanks-overlay" aria-hidden="true">
+    <div class="thanks-card">
+      <svg class="thanks-ico" viewBox="0 0 56 58"><use href="#razor" /></svg>
+      <p class="thanks-script">¡Gracias!</p>
+      <svg class="thanks-div" viewBox="0 0 256 30"><use href="#divider" /></svg>
+      <p class="thanks-sub">Tu confirmación fue enviada.<br />¡Nos vemos el <b>domingo a las 2</b>! ✂</p>
+    </div>
+  </div>
+
+  <script src="./index.js"></script>
+</body>
+</html>
