@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fotografía Profesional</title>
+  <title>Hard Street | Fotografía Profesional</title>
   <link rel="icon" href="LOG.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="index.css" />
@@ -31,9 +31,12 @@
       <li><a href="#about" onclick="closeNav()">Inicio</a></li>
       <li><a href="#gallery" onclick="closeNav()">Galería</a></li>
       <li><a href="#services" onclick="closeNav()">Servicios</a></li>
+      <li><a href="#packages" onclick="closeNav()">Paquetes</a></li>
       <li><a href="#testimonials" onclick="closeNav()">Opiniones</a></li>
       <li><a href="#contact" onclick="closeNav()">Contacto</a></li>
+      <li class="mobile-auth"><a href="#" onclick="openModal('loginModal'); closeNav();">Iniciar Sesión</a></li>
     </ul>
+    <button class="nav-auth-btn" id="authBtn" onclick="openModal('loginModal')">Iniciar Sesión</button>
     <div class="nav-toggle" id="navToggle" onclick="toggleNav()">
       <span></span><span></span><span></span>
     </div>
@@ -44,7 +47,7 @@
     <div class="hero-bg"></div>
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <p class="hero-subtitle">Fotografía Profesional</p>
+      <p class="hero-subtitle">Hard Street Estudio</p>
       <h1 class="hero-title">Capturando<br><span>Momentos Únicos</span></h1>
       <a href="#gallery" class="hero-cta">Explorar Galería</a>
     </div>
@@ -61,18 +64,14 @@
         <img src="IMG_9686-Enhanced-NR.jpg" alt="Sobre mí" />
       </div>
       <div class="about-text reveal-right">
-        <p class="section-label">Sobre Mí</p>
+        <p class="section-label">Sobre Nosotros</p>
         <h2 class="section-title">La historia detrás<br>de cada imagen</h2>
         <div class="section-line"></div>
         <p>
-          Cada fotografía cuenta una historia. Con más de una década de experiencia,
-          me especializo en capturar la esencia de cada momento, transformando
-          lo efímero en recuerdos atemporales.
+          Hard Street es un estudio de fotografía y vídeo especializado en eventos sociales: bodas, quinceañeros, bautizos, graduaciones y más. También ofrecemos servicios de medios visuales como flyers, publicidad para negocios y fotografía de producto.
         </p>
         <p>
-          Mi enfoque combina una estética cuidada con una sensibilidad única para
-          la luz y la composición, creando imágenes que trascienden lo ordinario
-          y conectan emocionalmente con quien las observa.
+          Nuestro enfoque combina una estética cuidada con sensibilidad única para la luz y la composición, creando imágenes que trascienden lo ordinario y conectan emocionalmente con quien las observa.
         </p>
         <div class="about-stats">
           <div>
@@ -101,48 +100,49 @@
     </div>
     <div class="gallery-filters reveal">
       <button class="filter-btn active" data-filter="all">Todos</button>
-      <button class="filter-btn" data-filter="paisaje">Paisajes</button>
+      <button class="filter-btn" data-filter="boda">Bodas</button>
+      <button class="filter-btn" data-filter="quince">XV Años</button>
       <button class="filter-btn" data-filter="retrato">Retratos</button>
-      <button class="filter-btn" data-filter="urbano">Urbano</button>
+      <button class="filter-btn" data-filter="comercial">Comercial</button>
     </div>
     <div class="gallery-grid">
-      <div class="gallery-item tall reveal" data-category="paisaje">
-        <img src="IMG_3146-Mejorado-NR_DxO_0004_Grupo 1 copia 4.jpg" alt="Paisaje 1" loading="lazy" />
+      <div class="gallery-item tall reveal" data-category="boda">
+        <img src="IMG_3146-Mejorado-NR_DxO_0004_Grupo 1 copia 4.jpg" alt="Boda" loading="lazy" />
         <div class="gallery-item-overlay">
-          <h3>Horizonte Dorado</h3>
-          <p>Paisaje</p>
+          <h3>Boda en Playa</h3>
+          <p>Boda</p>
         </div>
         <div class="gallery-item-line"></div>
       </div>
-      <div class="gallery-item reveal" data-category="urbano">
-        <img src="Hard Street.png" alt="Urbano 1" loading="lazy" />
+      <div class="gallery-item reveal" data-category="comercial">
+        <img src="Hard Street.png" alt="Comercial" loading="lazy" />
         <div class="gallery-item-overlay">
-          <h3>Calles de la Ciudad</h3>
-          <p>Urbano</p>
+          <h3>Branding Corporativo</h3>
+          <p>Comercial</p>
         </div>
         <div class="gallery-item-line"></div>
       </div>
       <div class="gallery-item reveal" data-category="retrato">
-        <img src="boungle.jpg" alt="Retrato 1" loading="lazy" />
+        <img src="boungle.jpg" alt="Retrato" loading="lazy" />
         <div class="gallery-item-overlay">
           <h3>Luz y Sombra</h3>
           <p>Retrato</p>
         </div>
         <div class="gallery-item-line"></div>
       </div>
-      <div class="gallery-item reveal" data-category="paisaje">
-        <img src="IMG_5873-Mejorado-NR.jpg" alt="Paisaje 2" loading="lazy" />
+      <div class="gallery-item reveal" data-category="quince">
+        <img src="IMG_5873-Mejorado-NR.jpg" alt="XV Años" loading="lazy" />
         <div class="gallery-item-overlay">
-          <h3>Naturaleza Viva</h3>
-          <p>Paisaje</p>
+          <h3>Quinceañera Real</h3>
+          <p>XV Años</p>
         </div>
         <div class="gallery-item-line"></div>
       </div>
-      <div class="gallery-item reveal" data-category="urbano">
-        <img src="IMG_9686-Enhanced-NR.jpg" alt="Urbano 2" loading="lazy" />
+      <div class="gallery-item reveal" data-category="boda">
+        <img src="IMG_9686-Enhanced-NR.jpg" alt="Boda" loading="lazy" />
         <div class="gallery-item-overlay">
-          <h3>Atardecer Urbano</h3>
-          <p>Urbano</p>
+          <h3>Amor Eterno</h3>
+          <p>Boda</p>
         </div>
         <div class="gallery-item-line"></div>
       </div>
@@ -155,32 +155,47 @@
     <p class="parallax-text reveal">Cada imagen, una <em>historia</em></p>
   </div>
 
-  <!-- Services -->
-  <section class="section services" id="services">
+  <!-- Extern Services Carousel -->
+  <section class="section extern-services" id="services">
     <div class="reveal">
-      <p class="section-label">Servicios</p>
-      <h2 class="section-title">Lo que Ofrezco</h2>
+      <p class="section-label">Nuestros Servicios</p>
+      <h2 class="section-title">Lo que Ofrecemos</h2>
       <div class="section-line"></div>
     </div>
-    <div class="services-grid">
-      <div class="service-card reveal" style="transition-delay: 0.1s;">
-        <span class="service-icon">📸</span>
-        <h3>Sesión Fotográfica</h3>
-        <p>Sesiones personalizadas en estudio o exteriores. Capturamos tu esencia con luz profesional y composición artística.</p>
-        <div class="service-price">Desde $150</div>
+    <div class="extern-carousel">
+      <div class="extern-carousel-inner" id="externCarousel">
+        <!-- Slides rendered by JS -->
       </div>
-      <div class="service-card reveal" style="transition-delay: 0.2s;">
-        <span class="service-icon">💒</span>
-        <h3>Cobertura de Eventos</h3>
-        <p>Cobertura completa de bodas, quinceañeros y eventos especiales. Momentos inolvidables que duran para siempre.</p>
-        <div class="service-price">Desde $500</div>
+      <div class="extern-carousel-nav">
+        <button class="extern-nav-btn prev" onclick="prevExternSlide()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div class="extern-dots" id="externDots"></div>
+        <button class="extern-nav-btn next" onclick="nextExternSlide()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
       </div>
-      <div class="service-card reveal" style="transition-delay: 0.3s;">
-        <span class="service-icon">🏢</span>
-        <h3>Fotografía Comercial</h3>
-        <p>Productos, marca personal y contenido corporativo. Imágenes que elevan la percepción de tu negocio.</p>
-        <div class="service-price">Desde $300</div>
-      </div>
+    </div>
+  </section>
+
+  <!-- Packages -->
+  <section class="section packages" id="packages">
+    <div class="reveal">
+      <p class="section-label">Paquetes</p>
+      <h2 class="section-title">Nuestros Paquetes</h2>
+      <div class="section-line"></div>
+      <p class="section-desc">Elige el paquete perfecto para tu evento. Todos incluyen nuestra garantía de calidad Hard Street.</p>
+    </div>
+    <div class="pkg-filters reveal" id="pkgFilters">
+      <button class="pkg-filter-btn active" data-category="all">Todos</button>
+      <button class="pkg-filter-btn" data-category="boda">Boda</button>
+      <button class="pkg-filter-btn" data-category="xv">XV Años</button>
+      <button class="pkg-filter-btn" data-category="bautizo">Bautizo</button>
+      <button class="pkg-filter-btn" data-category="graduacion">Graduación</button>
+      <button class="pkg-filter-btn" data-category="comercial">Comercial</button>
+    </div>
+    <div class="packages-grid" id="packagesGrid">
+      <!-- Packages rendered by JS -->
     </div>
   </section>
 
@@ -203,7 +218,7 @@
         <p class="testimonial-role">Sesión de Marca Personal</p>
       </div>
       <div class="testimonial-item">
-        <p class="testimonial-quote">Trabajar con él fue una experiencia increíble. Su atención al detalle y su capacidad para capturar emociones lo hacen único. Mis clientes aman las fotos.</p>
+        <p class="testimonial-quote">Trabajar con ellos fue una experiencia increíble. Su atención al detalle y su capacidad para capturar emociones lo hacen único. Mis clientes aman las fotos.</p>
         <p class="testimonial-author">Laura Gutiérrez</p>
         <p class="testimonial-role">Fotografía Comercial</p>
       </div>
@@ -222,10 +237,10 @@
         <p class="section-label">Contacto</p>
         <h2 class="section-title">Trabajemos Juntos</h2>
         <div class="section-line"></div>
-        <p>Tienes un proyecto en mente? Me encantaría escuchar tu historia. Contáctame y hagamos que tus momentos cobren vida.</p>
+        <p>Tienes un evento en mente? Contáctanos y hagamos que tus momentos cobren vida con Hard Street.</p>
         <div class="contact-detail">
           <div class="contact-detail-icon">✉</div>
-          <span>hola@fotografia.com</span>
+          <span>hola@hardstreet.com</span>
         </div>
         <div class="contact-detail">
           <div class="contact-detail-icon">☎</div>
@@ -246,8 +261,15 @@
           <label for="email">Tu Email</label>
         </div>
         <div class="form-group">
-          <input type="text" id="subject" placeholder=" " />
-          <label for="subject">Asunto</label>
+          <select id="serviceType" required>
+            <option value="">Tipo de servicio</option>
+            <option value="boda">Boda</option>
+            <option value="quince">XV Años</option>
+            <option value="bautizo">Bautizo</option>
+            <option value="graduacion">Graduación</option>
+            <option value="comercial">Comercial</option>
+            <option value="otro">Otro</option>
+          </select>
         </div>
         <div class="form-group">
           <textarea id="message" placeholder=" " rows="4" required></textarea>
@@ -266,7 +288,7 @@
     <div class="footer-grid">
       <div class="footer-brand">
         <img src="LOG.png" alt="Logo" />
-        <p>Capturando momentos únicos con pasión y arte. Cada fotografía es una ventana a una historia que merece ser contada.</p>
+        <p>Hard Street Estudio - Capturando momentos únicos con pasión y arte. Cada fotografía es una ventana a una historia que merece ser contada.</p>
       </div>
       <div class="footer-col">
         <h4>Navegación</h4>
@@ -274,29 +296,32 @@
           <li><a href="#about">Inicio</a></li>
           <li><a href="#gallery">Galería</a></li>
           <li><a href="#services">Servicios</a></li>
+          <li><a href="#packages">Paquetes</a></li>
           <li><a href="#contact">Contacto</a></li>
         </ul>
       </div>
       <div class="footer-col">
         <h4>Servicios</h4>
         <ul>
-          <li><a href="#services">Sesiones</a></li>
-          <li><a href="#services">Eventos</a></li>
+          <li><a href="#services">Bodas</a></li>
+          <li><a href="#services">XV Años</a></li>
+          <li><a href="#services">Bautizos</a></li>
+          <li><a href="#services">Graduaciones</a></li>
           <li><a href="#services">Comercial</a></li>
-          <li><a href="#services">Retratos</a></li>
         </ul>
       </div>
       <div class="footer-col">
-        <h4>Legal</h4>
+        <h4>Contacto</h4>
         <ul>
-          <li><a href="#">Privacidad</a></li>
-          <li><a href="#">Términos</a></li>
-          <li><a href="#">Cookies</a></li>
+          <li><a href="mailto:hola@hardstreet.com">hola@hardstreet.com</a></li>
+          <li><a href="tel:+525512345678">+52 (55) 1234-5678</a></li>
+          <li><a href="#">Instagram</a></li>
+          <li><a href="#">Facebook</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      <p>&copy; 2026 Fotografía Profesional. Todos los derechos reservados.</p>
+      <p>&copy; 2026 Hard Street Estudio. Todos los derechos reservados.</p>
       <div class="footer-social">
         <a href="#" aria-label="Instagram"><img src="instagram-logo.png" alt="Instagram" /></a>
         <a href="#" aria-label="Facebook"><img src="facebook-logo.png" alt="Facebook" /></a>
@@ -309,6 +334,30 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
   </div>
 
+  <!-- Login Modal -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal('loginModal')">&times;</button>
+      <h2>Iniciar Sesión</h2>
+      <p class="modal-subtitle">Accede para ver tu paquete y fotos</p>
+      <form onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <input type="email" id="loginEmail" placeholder=" " required />
+          <label for="loginEmail">Email</label>
+        </div>
+        <div class="form-group">
+          <input type="password" id="loginPassword" placeholder=" " required />
+          <label for="loginPassword">Contraseña</label>
+        </div>
+        <button type="submit" class="submit-btn">Iniciar Sesión</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="Models/Service.js"></script>
+  <script src="Models/ExternService.js"></script>
+  <script src="Models/Package.js"></script>
+  <script src="Models/Packages.js"></script>
   <script src="index.js"></script>
 </body>
 </html>
