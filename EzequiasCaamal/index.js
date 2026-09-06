@@ -191,7 +191,7 @@ function confirmarAsistencia(event) {
   window.__rsvpBusy = true;
 
   const msg = encodeURIComponent('¡Qué onda! ✂ Confirmo mi asistencia al cumpleaños del Fede. Domingo 2 de la tarde. ¡Ahí voy!');
-  const url = 'https://wa.me/529990000000?text=' + msg;
+  const url = 'https://wa.me/529991115266?text=' + msg;
 
   const rect = event && event.currentTarget ? event.currentTarget.getBoundingClientRect() : null;
   snipConfetti(rect ? rect.left + rect.width / 2 : window.innerWidth / 2,
