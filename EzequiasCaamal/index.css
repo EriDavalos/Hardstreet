@@ -16,14 +16,16 @@
   --gold: #c9a45c;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }  html { scroll-behavior: smooth; }
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; overflow-x: hidden; }
 body {
   background: var(--night);
   color: var(--chrome);
   font-family: 'Barlow Condensed', sans-serif;
   overflow-x: hidden;
-  min-height: 100vh;}
-img { max-display: block; }
+  min-height: 100vh;
+}
+img { display: block; }
 .no-scroll { overflow: hidden; }
 
 /* subtle global grain + vignette */
@@ -101,6 +103,7 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001s !important; animation-iteration-count: 1 !important; transition-duration: 0.001s !important; }
   html { scroll-behavior: auto; }
+}
 @keyframes tapPulse { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
 .tap-blade { display: inline-block; animation: tapSpin 2.6s ease-in-out infinite; }
 @keyframes tapSpin { 0%,100% { transform: rotate(0); } 50% { transform: rotate(180deg); } }
@@ -543,8 +546,3 @@ body::before {
   .hero-chalk-quote { display: none; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.001s !important; animation-iteration-count: 1 !important; transition-duration: 0.001s !important; }
-  html { scroll-behavior: auto; }
-}
-}
