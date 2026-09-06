@@ -93,3 +93,6 @@ const ExternServicesDB = [
     'Desde $3,000'
   )
 ];
+
+// Alias for backward compatibility
+const ExternServicesData = ExternServicesDB;

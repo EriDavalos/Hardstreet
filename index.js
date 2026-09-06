@@ -223,12 +223,13 @@ function filterPackages() {
 
 // ========== EXTERN SERVICES CAROUSEL ==========
 let currentExternSlide = 0;
+const _extServices = (typeof ExternServicesDB !== 'undefined') ? ExternServicesDB : [];
 
 function renderExternCarousel() {
   const container = document.getElementById('externCarousel');
   const dotsContainer = document.getElementById('externDots');
   
-  container.innerHTML = ExternServicesData.map((service, index) => `
+  container.innerHTML = _extServices.map((service, index) => `
     <div class="extern-slide ${index === 0 ? 'active' : ''}">
       <div class="extern-slide-image">
         <img src="${service.image}" alt="${service.title}" loading="lazy" />
@@ -249,7 +250,7 @@ function renderExternCarousel() {
     </div>
   `).join('');
   
-  dotsContainer.innerHTML = ExternServicesData.map((_, index) => `
+  dotsContainer.innerHTML = _extServices.map((_, index) => `
     <span class="extern-dot ${index === 0 ? 'active' : ''}" onclick="goToExternSlide(${index})"></span>
   `).join('');
 }
@@ -267,12 +268,12 @@ function showExternSlide(index) {
 }
 
 function nextExternSlide() {
-  const next = (currentExternSlide + 1) % ExternServicesData.length;
+  const next = (currentExternSlide + 1) % _extServices.length;
   showExternSlide(next);
 }
 
 function prevExternSlide() {
-  const prev = (currentExternSlide - 1 + ExternServicesData.length) % ExternServicesData.length;
+  const prev = (currentExternSlide - 1 + _extServices.length) % _extServices.length;
   showExternSlide(prev);
 }
 
@@ -371,8 +372,10 @@ function handleSubmit(e) {
 // ========== SMOOTH ANCHOR SCROLLING ==========
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   anchor.addEventListener('click', function(e) {
+    const href = this.getAttribute('href');
+    if (!href || href === '#' || href.length < 2) return;
     e.preventDefault();
-    const target = document.querySelector(this.getAttribute('href'));
+    const target = document.querySelector(href);
     if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 });
