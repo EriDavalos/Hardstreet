@@ -199,6 +199,76 @@ const deliveryData = {
   ]
 };
 
+// ========== PAST PACKAGES DELIVERY DATA (Demo) ==========
+function generatePastDeliveryData(pkg) {
+  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  const totalServices = pkg.servicios.length;
+  
+  // Randomly determine how many services are completed (at least 60% done for past packages)
+  const minCompleted = Math.ceil(totalServices * 0.6);
+  const maxCompleted = totalServices;
+  const completedCount = Math.floor(Math.random() * (maxCompleted - minCompleted + 1)) + minCompleted;
+  
+  const completedServices = [];
+  const serviceDetails = [];
+  let activeService = null;
+  
+  // Randomly pick which services are completed
+  const indices = Array.from({length: totalServices}, (_, i) => i);
+  // Shuffle and pick first N as completed
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  const completedIndices = indices.slice(0, completedCount).sort((a, b) => a - b);
+  
+  // Generate random dates and notes for completed services
+  const notes = [
+    'Entregado en formato digital de alta resolución.',
+    'Archivo listo para descarga inmediata.',
+    'Proyecto completado exitosamente.',
+    'Servicio finalizado con satisfacción del cliente.',
+    'Archivos entregados en USB personalizado.',
+  ];
+  
+  for (let i = 0; i < totalServices; i++) {
+    if (completedIndices.includes(i)) {
+      completedServices.push(i);
+      const month = months[Math.floor(Math.random() * 6)]; // Random month from first half of year
+      const day = Math.floor(Math.random() * 28) + 1;
+      serviceDetails.push({
+        fechaEntrega: `${day} ${month} 2026`,
+        notas: notes[Math.floor(Math.random() * notes.length)]
+      });
+    } else if (activeService === null && Math.random() > 0.5) {
+      activeService = i;
+      serviceDetails.push({
+        notas: 'En proceso de entrega.',
+        progreso: Math.floor(Math.random() * 40) + 30
+      });
+    } else {
+      serviceDetails.push({});
+    }
+  }
+  
+  // If no active service was set, mark one as pending
+  if (activeService === null) {
+    for (let i = 0; i < totalServices; i++) {
+      if (!completedIndices.includes(i)) {
+        activeService = i;
+        serviceDetails[i] = { notas: 'Pendiente de entrega.' };
+        break;
+      }
+    }
+  }
+  
+  return {
+    completedServices,
+    activeService,
+    serviceDetails
+  };
+}
+
 // ========== RENDER PACKAGE DETAIL ==========
 function renderPackageDetail() {
   const container = document.getElementById('packageDetail');
@@ -297,7 +367,7 @@ function renderPackageDetail() {
       <div class="pkg-section-header">
         <div class="pkg-section-title">
           ${icons.box}
-          <h3>Otros Paquetes Disponibles</h3>
+          <h3>Paquetes anteriormente elegidos</h3>
         </div>
       </div>
       <div class="past-packages-grid">
@@ -305,6 +375,10 @@ function renderPackageDetail() {
           const pCatIcon = CategoryIcons[p.categoria] || CategoryIcons.general;
           const pTierLabel = TierLabels[p.tier] || p.tier;
           const pCatName = CategoryNames[p.categoria] || p.categoria;
+          const pDelivery = generatePastDeliveryData(p);
+          const pCompletedCount = pDelivery.completedServices.length;
+          const pTotalServices = p.servicios.length;
+          const pProgressPercent = Math.round((pCompletedCount / pTotalServices) * 100);
           return `
             <div class="past-pkg-card tier-${p.tier}">
               <div class="past-pkg-badge">${pTierLabel}</div>
@@ -318,21 +392,37 @@ function renderPackageDetail() {
               </div>
               <div class="past-pkg-divider"></div>
               <div class="past-pkg-services">
-                <span class="past-pkg-count">${p.servicios.length} servicios incluidos</span>
-                <ul>
-                  ${p.servicios.slice(0, 4).map(s => `<li><span class="past-pkg-svc-icon">${s.icon}</span>${s.nombre}</li>`).join('')}
-                  ${p.servicios.length > 4 ? `<li class="more">+${p.servicios.length - 4} servicios más</li>` : ''}
-                </ul>
+                <div class="past-pkg-progress-header">
+                  <span class="past-pkg-count">${pCompletedCount} de ${pTotalServices} servicios entregados</span>
+                  <span class="past-pkg-progress-text">${pProgressPercent}%</span>
+                </div>
+                <div class="past-pkg-mini-timeline">
+                  ${p.servicios.map((s, idx) => {
+                    const isDone = pDelivery.completedServices.includes(idx);
+                    const isActive = idx === pDelivery.activeService;
+                    const statusClass = isDone ? 'done' : isActive ? 'active' : 'pending';
+                    return `
+                      <div class="past-pkg-timeline-item ${statusClass}">
+                        <div class="past-pkg-timeline-dot">
+                          ${isDone ? icons.check : isActive ? icons.clock : '<span class="past-pkg-dot-inner"></span>'}
+                        </div>
+                        <div class="past-pkg-timeline-info">
+                          <span class="past-pkg-timeline-name">${s.nombre}</span>
+                          <span class="past-pkg-timeline-status">${isDone ? 'Entregado' : isActive ? 'En proceso' : 'Pendiente'}</span>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
               </div>
               <div class="past-pkg-footer">
                 <div class="past-pkg-price">
-                  <span>Desde</span>
+                  <span>Inversión</span>
                   <strong>${p.precio}</strong>
                 </div>
-                <a href="#contact" class="past-pkg-cta">
-                  Cotizar
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </a>
+                <div class="past-pkg-progress-bar">
+                  <div class="past-pkg-progress-fill" style="width:${pProgressPercent}%"></div>
+                </div>
               </div>
             </div>
           `;
