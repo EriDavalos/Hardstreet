@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mi Paquete | Hard Street</title>
-  <link rel="icon" href="LOG.png" type="image/png" />
+  <link rel="icon" href="images/LOG.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="dashboard.css?v=50" />
   <style id="pkg-inline">
@@ -345,7 +345,7 @@
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-      <img src="LOG-SB.png" alt="Hard Street" />
+      <img src="images/LOG-SB.png" alt="Hard Street" />
       <span class="brand-text">Hard Street</span>
     </div>
     
@@ -403,7 +403,7 @@
         <line x1="3" y1="18" x2="21" y2="18"/>
       </svg>
     </button>
-    <img src="LOG-SB.png" alt="Hard Street" class="mobile-logo" />
+    <img src="images/LOG-SB.png" alt="Hard Street" class="mobile-logo" />
     <div class="mobile-user" id="mobileUser">CD</div>
   </header>
 
@@ -534,8 +534,9 @@
       <!-- Photo Filters -->
       <div class="photo-filters">
         <button class="filter-btn active" data-filter="all">Todas</button>
-        <button class="filter-btn" data-filter="previa">Sesión Previa</button>
-        <button class="filter-btn" data-filter="fiesta">Fiesta</button>
+        <button class="filter-btn" data-filter="public">Públicas</button>
+        <button class="filter-btn" data-filter="private">Privadas</button>
+        <button class="filter-btn" data-filter="video">Videos / PDF</button>
       </div>
       
       <div class="photos-grid" id="photosGrid">
@@ -570,10 +571,10 @@
   <!-- Overlay for mobile sidebar -->
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-  <script src="Models/Service.js?v=10"></script>
-  <script src="Models/ExternService.js?v=10"></script>
-  <script src="Models/Package.js?v=10"></script>
-  <script src="Models/Packages.js?v=10"></script>
-  <script src="dashboard.js?v=50"></script>
+  <script src="js/config.js?v=2"></script>
+  <script src="js/models.js?v=2"></script>
+  <script src="js/api.js?v=2"></script>
+  <script src="js/renderers.js?v=2"></script>
+  <script src="dashboard.js?v=52"></script>
 </body>
 </html>

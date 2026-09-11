@@ -166,7 +166,7 @@ img { max-width: 100%; display: block; }
 }
 .hero-bg {
   position: absolute; inset: 0;
-  background: url('IMG_3146-Mejorado-NR_DxO_0004_Grupo 1 copia 4.jpg') center/cover no-repeat;
+  background: url('./images/banner.jpg') center/cover no-repeat;
   transform: scale(1.1);
   animation: heroZoom 20s ease-in-out infinite alternate;
 }
@@ -390,7 +390,7 @@ img { max-width: 100%; display: block; }
 }
 .parallax-bg {
   position: absolute; inset: -50px;
-  background: url('IMG_5873-Mejorado-NR.jpg') center/cover no-repeat;
+  background: url('images/banner1.jpg') center/cover no-repeat;
   will-change: transform;
 }
 .parallax-text {

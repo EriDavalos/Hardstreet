@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hard Street | Fotografía Profesional</title>
-  <link rel="icon" href="LOG.png" type="image/png" />
+  <link rel="icon" href="./images/LOG.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="index.css" />
 </head>
@@ -25,7 +25,7 @@
   <!-- Navbar -->
   <nav class="navbar" id="navbar">
     <a href="#hero">
-      <img src="LOG-SB.png" alt="Logo" class="nav-logo" />
+      <img src="./images/LOG-SB.png" alt="Logo" class="nav-logo" />
     </a>
     <ul class="nav-links" id="navLinks">
       <li><a href="#about" onclick="closeNav()">Inicio</a></li>
@@ -47,7 +47,7 @@
     <div class="hero-bg"></div>
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <p class="hero-subtitle">Hard Street Estudio</p>
+      <p class="hero-subtitle">Hard Street</p>
       <h1 class="hero-title">Capturando<br><span>Momentos Únicos</span></h1>
       <a href="#gallery" class="hero-cta">Explorar Galería</a>
     </div>
@@ -61,7 +61,7 @@
   <section class="section about" id="about">
     <div class="about-grid">
       <div class="about-image-wrap reveal-left">
-        <img src="IMG_9686-Enhanced-NR.jpg" alt="Sobre mí" />
+        <img src="./images/review.jpg" alt="Sobre mí" />
       </div>
       <div class="about-text reveal-right">
         <p class="section-label">Sobre Nosotros</p>
@@ -75,15 +75,15 @@
         </p>
         <div class="about-stats">
           <div>
-            <div class="stat-number" data-count="150">0</div>
+            <div class="stat-number" data-count="30">0</div>
             <div class="stat-label">Proyectos</div>
           </div>
           <div>
-            <div class="stat-number" data-count="12">0</div>
+            <div class="stat-number" data-count="4">0</div>
             <div class="stat-label">Años Exp.</div>
           </div>
           <div>
-            <div class="stat-number" data-count="98">0</div>
+            <div class="stat-number" data-count="50">0</div>
             <div class="stat-label">Clientes Felices</div>
           </div>
         </div>
@@ -99,53 +99,10 @@
       <div class="section-line"></div>
     </div>
     <div class="gallery-filters reveal">
-      <button class="filter-btn active" data-filter="all">Todos</button>
-      <button class="filter-btn" data-filter="boda">Bodas</button>
-      <button class="filter-btn" data-filter="quince">XV Años</button>
-      <button class="filter-btn" data-filter="retrato">Retratos</button>
-      <button class="filter-btn" data-filter="comercial">Comercial</button>
+      <!-- Filtros generados por JS segun las categorias de las fotos publicas -->
     </div>
     <div class="gallery-grid">
-      <div class="gallery-item tall reveal" data-category="boda">
-        <img src="IMG_3146-Mejorado-NR_DxO_0004_Grupo 1 copia 4.jpg" alt="Boda" loading="lazy" />
-        <div class="gallery-item-overlay">
-          <h3>Boda en Playa</h3>
-          <p>Boda</p>
-        </div>
-        <div class="gallery-item-line"></div>
-      </div>
-      <div class="gallery-item reveal" data-category="comercial">
-        <img src="Hard Street.png" alt="Comercial" loading="lazy" />
-        <div class="gallery-item-overlay">
-          <h3>Branding Corporativo</h3>
-          <p>Comercial</p>
-        </div>
-        <div class="gallery-item-line"></div>
-      </div>
-      <div class="gallery-item reveal" data-category="retrato">
-        <img src="boungle.jpg" alt="Retrato" loading="lazy" />
-        <div class="gallery-item-overlay">
-          <h3>Luz y Sombra</h3>
-          <p>Retrato</p>
-        </div>
-        <div class="gallery-item-line"></div>
-      </div>
-      <div class="gallery-item reveal" data-category="quince">
-        <img src="IMG_5873-Mejorado-NR.jpg" alt="XV Años" loading="lazy" />
-        <div class="gallery-item-overlay">
-          <h3>Quinceañera Real</h3>
-          <p>XV Años</p>
-        </div>
-        <div class="gallery-item-line"></div>
-      </div>
-      <div class="gallery-item reveal" data-category="boda">
-        <img src="IMG_9686-Enhanced-NR.jpg" alt="Boda" loading="lazy" />
-        <div class="gallery-item-overlay">
-          <h3>Amor Eterno</h3>
-          <p>Boda</p>
-        </div>
-        <div class="gallery-item-line"></div>
-      </div>
+      <!-- Fotos publicas renderizadas por JS (galerias con is_public = 1) -->
     </div>
   </section>
 
@@ -189,7 +146,7 @@
     <div class="pkg-filters reveal" id="pkgFilters">
       <button class="pkg-filter-btn active" data-category="all">Todos</button>
       <button class="pkg-filter-btn" data-category="boda">Boda</button>
-      <button class="pkg-filter-btn" data-category="xv">XV Años</button>
+      <button class="pkg-filter-btn" data-category="xv-anos">XV Años</button>
       <button class="pkg-filter-btn" data-category="bautizo">Bautizo</button>
       <button class="pkg-filter-btn" data-category="graduacion">Graduación</button>
       <button class="pkg-filter-btn" data-category="comercial">Comercial</button>
@@ -240,15 +197,15 @@
         <p>Tienes un evento en mente? Contáctanos y hagamos que tus momentos cobren vida con Hard Street.</p>
         <div class="contact-detail">
           <div class="contact-detail-icon">✉</div>
-          <span>hola@hardstreet.com</span>
+          <span>hardstreet7@gmail.com</span>
         </div>
         <div class="contact-detail">
           <div class="contact-detail-icon">☎</div>
-          <span>+52 (55) 1234-5678</span>
+          <span>+52 990 101 7986</span>
         </div>
         <div class="contact-detail">
           <div class="contact-detail-icon">◎</div>
-          <span>Ciudad de México, MX</span>
+          <span>Mérida, Yuc. Temozón</span>
         </div>
       </div>
       <form class="contact-form reveal-right" onsubmit="handleSubmit(event)">
@@ -287,7 +244,7 @@
   <footer class="footer">
     <div class="footer-grid">
       <div class="footer-brand">
-        <img src="LOG.png" alt="Logo" />
+        <img src="images/LOG.png" alt="Logo" />
         <p>Hard Street Estudio - Capturando momentos únicos con pasión y arte. Cada fotografía es una ventana a una historia que merece ser contada.</p>
       </div>
       <div class="footer-col">
@@ -313,8 +270,8 @@
       <div class="footer-col">
         <h4>Contacto</h4>
         <ul>
-          <li><a href="mailto:hola@hardstreet.com">hola@hardstreet.com</a></li>
-          <li><a href="tel:+525512345678">+52 (55) 1234-5678</a></li>
+          <li><a href="mailto:hardstreet7@gmail.com">hardstreet7@gmail.com</a></li>
+          <li><a href="tel:+529901017986">+52 990 101 7986</a></li>
           <li><a href="#">Instagram</a></li>
           <li><a href="#">Facebook</a></li>
         </ul>
@@ -323,8 +280,8 @@
     <div class="footer-bottom">
       <p>&copy; 2026 Hard Street Estudio. Todos los derechos reservados.</p>
       <div class="footer-social">
-        <a href="#" aria-label="Instagram"><img src="instagram-logo.png" alt="Instagram" /></a>
-        <a href="#" aria-label="Facebook"><img src="facebook-logo.png" alt="Facebook" /></a>
+        <a href="#" aria-label="Instagram"><img src="images/instagram-logo.png" alt="Instagram" /></a>
+        <a href="#" aria-label="Facebook"><img src="images/facebook-logo.png" alt="Facebook" /></a>
       </div>
     </div>
   </footer>
@@ -354,10 +311,10 @@
     </div>
   </div>
 
-  <script src="Models/Service.js?v=3"></script>
-  <script src="Models/ExternService.js?v=3"></script>
-  <script src="Models/Package.js?v=3"></script>
-  <script src="Models/Packages.js?v=3"></script>
-  <script src="index.js?v=3"></script>
+  <script src="js/config.js?v=5"></script>
+  <script src="js/models.js?v=5"></script>
+  <script src="js/api.js?v=5"></script>
+  <script src="js/renderers.js?v=5"></script>
+  <script src="index.js?v=8"></script>
 </body>
 </html>

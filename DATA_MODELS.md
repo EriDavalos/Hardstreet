@@ -1,273 +1,170 @@
-# Hard Street - Estructura de Datos
+# Hard Street — Modelos de Datos & API
 
-Este documento describe la estructura de datos utilizada en la página web de Hard Street, diseñada para facilitar la integración futura con una base de datos.
+Este documento describe los **modelos del frontend** (en inglés, iguales a los que devuelve la API), los **endpoints del backend** y los **ajustes pendientes en la base de datos**.
 
 ---
 
-## 📦 Paquetes (Packages)
+## 📦 Modelos del Frontend
 
-Cada paquete representa un servicio completo que un cliente puede contratar.
+Definidos en `js/models.js` y devueltos tal cual por la API (`backend/lib/mappers.ts`).
 
-### Esquema de Base de Datos (futuro)
-
-```sql
-CREATE TABLE packages (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  nombre VARCHAR(255) NOT NULL,
-  subtitulo VARCHAR(255),
-  precio_numero DECIMAL(10,2) NOT NULL,
-  precio_formato VARCHAR(50),  -- Ej: "$12,000"
-  moneda VARCHAR(3) DEFAULT 'MXN',
-  destacado BOOLEAN DEFAULT FALSE,
-  activo BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-```
-
-### Clase JavaScript
-
-```javascript
-class Package {
-  constructor(id, nombre, subtitulo, servicios, precio, precioNumero, moneda = 'MXN') {
-    this.id = id;
-    this.nombre = nombre;           // Ej: "Sesión de Boda - Premium"
-    this.subtitulo = subtitulo;     // Ej: "Hard Street Estudio de Fotografía y Vídeo"
-    this.servicios = servicios;     // Array de objetos Service
-    this.precio = precio;           // Formateado: "$12,000"
-    this.precioNumero = precioNumero; // Número: 12000
-    this.moneda = moneda;           // "MXN"
-    this.destacado = false;         // true = paquete destacado
-  }
+### Package (catálogo público)
+```ts
+{
+  id: number
+  name: string
+  subtitle: string
+  description: string
+  price: number          // double en BD (decimal)
+  currency: string       // "MXN"
+  tier: Tier             // modelo completo
+  packageCategory: PackageCategory  // modelo completo
+  isExtern: boolean
+  urlImage: string       // packages.url_image — imagen del carousel "Nuestros servicios"
+  services: Service[]    // lista de modelos Service
 }
 ```
 
-### Ejemplo de Uso
-
-```javascript
-// Crear un nuevo paquete
-const miPaquete = new Package(
-  5,
-  'Sesión de Boda - Gold',
-  'Hard Street Estudio',
-  [servicesDB[0], servicesDB[4], servicesDB[5]],  // Servicios incluidos
-  '$8,500',
-  8500
-).setDestacado(true);
-
-// Agregar a la base de datos
-packagesDB.push(miPaquete);
-
-// Renderizar
-packagesContainer.innerHTML = renderPackageCard(miPaquete);
-```
-
----
-
-## 🛠️ Servicios (Services)
-
-Cada servicio representa un elemento incluido en un paquete.
-
-### Esquema de Base de Datos (futuro)
-
-```sql
-CREATE TABLE services (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  nombre VARCHAR(255) NOT NULL,
-  icon VARCHAR(50),  -- Emoji o clase de icono
-  descripcion TEXT,
-  activo BOOLEAN DEFAULT TRUE
-);
-
--- Tabla pivote para relación muchos a muchos
-CREATE TABLE package_services (
-  package_id INT,
-  service_id INT,
-  PRIMARY KEY (package_id, service_id),
-  FOREIGN KEY (package_id) REFERENCES packages(id),
-  FOREIGN KEY (service_id) REFERENCES services(id)
-);
-```
-
-### Clase JavaScript
-
-```javascript
-class Service {
-  constructor(id, nombre, icon, descripcion = '') {
-    this.id = id;
-    this.nombre = nombre;           // Ej: "Video cinematográfico"
-    this.icon = icon;               // Ej: "🎬"
-    this.descripcion = descripcion; // Ej: "Video artístico con narrativa"
-  }
+### PurchasedPackage (paquete comprado por un cliente — dashboard)
+Hereda los datos del paquete principal y agrega pagos, estado y sus propios servicios.
+```ts
+{
+  id: number
+  name: string; subtitle: string; description: string
+  price: number          // precio total acordado (heredado)
+  paid: number           // lo que el cliente YA pagó
+  currency: string
+  status: Status         // estado global: Pendiente | En proceso | Entregado...
+  package: Package       // paquete principal del que hereda (con tier, category, services)
+  services: PurchasedPackageService[]
 }
 ```
 
-### Ejemplo de Uso
-
-```javascript
-// Crear un nuevo servicio
-const nuevoServicio = new Service(
-  23,
-  'Sesión de Trash the Dress',
-  '👗',
-  'Sesión fotográfica después de la boda con vestido de novia'
-);
-
-// Agregar a la base de datos
-servicesDB.push(nuevoServicio);
-
-// Asignar a un paquete
-miPaquete.servicios.push(nuevoServicio);
-```
-
----
-
-## 👤 Usuarios (Users) - Futuro
-
-Para el sistema de login y dashboard.
-
-### Esquema de Base de Datos (futuro)
-
-```sql
-CREATE TABLE users (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  nombre VARCHAR(255) NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  telefono VARCHAR(20),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Relación usuario-paquete
-CREATE TABLE user_packages (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  user_id INT,
-  package_id INT,
-  estado ENUM('pendiente', 'en_proceso', 'completado') DEFAULT 'pendiente',
-  fecha_contratacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  fecha_entrega DATE,
-  FOREIGN KEY (user_id) REFERENCES users(id),
-  FOREIGN KEY (package_id) REFERENCES packages(id)
-);
-```
-
----
-
-## 📸 Fotos (Photos) - Futuro
-
-Para el módulo de "Drive" del dashboard.
-
-### Esquema de Base de Datos (futuro)
-
-```sql
-CREATE TABLE photos (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  user_package_id INT,
-  url VARCHAR(500) NOT NULL,
-  thumbnail_url VARCHAR(500),
-  titulo VARCHAR(255),
-  estado ENUM('pendiente', 'en_edicion', 'lista') DEFAULT 'pendiente',
-  seleccionada BOOLEAN DEFAULT FALSE,
-  fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_package_id) REFERENCES user_packages(id)
-);
-```
-
----
-
-## 🔄 Flujo de Datos
-
-### 1. Renderizado de Paquetes
-
-```
-packagesDB → renderPackageCard() → HTML → packagesGrid
-```
-
-### 2. Sistema de Login (Demo)
-
-```
-loginForm → handleLogin() → currentUser → showDashboard()
-```
-
-### 3. Dashboard
-
-```
-currentUser.paquete → renderPackageCard()
-currentUser.fotos → renderDriveGrid()
-```
-
----
-
-## 📝 Cómo Agregar un Nuevo Paquete
-
-1. **Crear servicios** (si no existen):
-```javascript
-const s1 = new Service(23, 'Nuevo servicio', '📸', 'Descripción');
-servicesDB.push(s1);
-```
-
-2. **Crear paquete**:
-```javascript
-const pkg = new Package(
-  5,                          // ID único
-  'Nombre del Paquete',       // Nombre
-  'Subtítulo',                // Descripción corta
-  [servicesDB[22], s1],       // Servicios incluidos
-  '$5,000',                   // Precio formateado
-  5000                        // Precio numérico
-).setDestacado(true);         // Opcional: marcar como destacado
-```
-
-3. **Agregar a la base de datos**:
-```javascript
-packagesDB.push(pkg);
-```
-
-4. **El JS renderiza automáticamente** al cargar la página.
-
----
-
-## 🎨 Variables de Color
-
-La paleta de colores está definida en `:root` en `index.css`:
-
-```css
-:root {
-  --gold: #c9a96e;           /* Color principal */
-  --gold-light: #f0d48a;     /* Dorado claro */
-  --bg: #0a0a0a;             /* Fondo principal */
-  --bg-alt: #0e0e0e;         /* Fondo alternativo */
-  --text: #f0f0f0;           /* Texto principal */
-  --text-secondary: #ccc;    /* Texto secundario */
-  /* ... más variables en index.css */
+### PurchasedPackageService
+```ts
+{
+  id: number
+  description: string        // nota de avance escrita por el admin ("En proceso del story board...")
+  deliveryDate: number|null  // días de entrega (INTEGER en BD)
+  status: Status             // Pendiente | En proceso | Entregado
+  service: Service           // servicio base (name, icon, description)
 }
 ```
 
-Para cambiar la paleta globalmente, solo modifica estas variables en `:root`.
+### Service / Tier / PackageCategory / Status
+```ts
+Service   { id, name, description, icon }              // icon: "icon/video.svg"
+Tier      { id, name, tier }                           // Premium(1), Gold(2), Basic(3)
+PackageCategory { id, name, icon }                     // Boda, XV Años, Bautizo...
+Status    { id, name }
+```
+
+### User / Gallery
+```ts
+User    { id, name, lastname, number, email, role }    // sin password, nunca viaja al front
+Gallery { id, url, user, galleryType, purchasedPackage, packageCategory, isPublic }
+        // galleryType: "image" | "video" | "pdf"
+```
+
+> Compatibilidad: el frontend resuelve `services.icon` ("icon/video.svg") a un SVG mediante `ServiceIcons` en `js/models.js`. Las claves CSS de categoría/tier se derivan con `categoryKey()` ("XV Años" → "xv-anos").
 
 ---
 
-## 🚀 Integración con Backend (Futuro)
+## 🚀 Backend (`backend/`)
 
-Cuando estés listo para conectar con una base de datos real:
+Next.js (API routes) + `pg` + `jose` (JWT) + `bcryptjs`. Desplegable en Vercel tal cual.
 
-1. **API Endpoints** a crear:
-   - `GET /api/packages` - Obtener todos los paquetes
-   - `GET /api/packages/:id` - Obtener un paquete
-   - `POST /api/packages` - Crear paquete (admin)
-   - `PUT /api/packages/:id` - Actualizar paquete (admin)
-   - `DELETE /api/packages/:id` - Eliminar paquete (admin)
+### Endpoints
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| GET | `/api/health` | — | Health check (verifica conexión a BD) |
+| POST | `/api/auth/login` | — | Login; setea cookie httpOnly `hs_session` |
+| POST | `/api/auth/logout` | — | Limpia la cookie |
+| GET | `/api/auth/me` | cookie | Usuario de la sesión (User) |
+| GET | `/api/packages` | — | Catálogo. Filtros: `?extern=true/false`, `?category=boda` |
+| GET | `/api/packages/:id` | — | Un paquete con todo incluido |
+| GET | `/api/categories` | — | Categorías (para los filtros) |
+| GET | `/api/tiers` | — | Tiers |
+| GET | `/api/services` | — | Catálogo de servicios |
+| GET | `/api/extern-services` | — | Servicios externos (carousel, `is_extern=1`) |
+| GET | `/api/my/packages` | cookie | **PurchasedPackages del usuario** (dashboard) |
+| GET | `/api/my/gallery` | cookie | Galería del usuario |
+| GET | `/api/public/gallery` | — | Galería pública (landing) |
+| GET | `/api/modules` | opcional | Módulos del sidebar con permisos por rol |
 
-2. **Auth Endpoints**:
-   - `POST /api/auth/login` - Iniciar sesión
-   - `POST /api/auth/register` - Registrarse
-   - `GET /api/auth/me` - Obtener usuario actual
+### Correr en local
+```bash
+cd backend
+npm install
+cp .env.example .env        # pon tu DATABASE_URL de Neon y JWT_SECRET
+npm run dev                 # next dev en http://localhost:4000
+```
 
-3. **Dashboard Endpoints**:
-   - `GET /api/user/package` - Obtener paquete del usuario
-   - `GET /api/user/photos` - Obtener fotos del usuario
-   - `PUT /api/user/photos/:id/select` - Seleccionar/deseleccionar foto
+Next.js carga `backend/.env` automaticamente (DATABASE_URL, JWT_SECRET). En VS Code tambien puedes lanzar el backend con **F5**: hay configuraciones listas en `.vscode/launch.json` (dev normal, dev con breakpoints y modo produccion).
+
+### Despliegue en Vercel
+1. `vercel` dentro de `backend/` (o importa la carpeta como proyecto).
+2. Environment variables: `DATABASE_URL` (Neon, con `sslmode=require`) y `JWT_SECRET`.
+3. `NODE_ENV=production` hace la cookie `secure; SameSite=Lax`. Si sirves el front desde **otro dominio**, cambia `sameSite: "lax"` → `"none"` en `backend/lib/auth.ts` para que la cookie cross-site funcione.
+
+### Conectar el frontend
+En `js/config.js`:
+```js
+window.HARDSTREET_API_URL = 'https://tu-backend.vercel.app';
+```
+Vacio = mismo origen.
+
+### Modo estricto (sin fallback)
+El frontend ya **no tiene datos demo ni fallback local**: todo viene del backend.
+
+- **Landing** (`index.js`): mientras carga muestra el loader; si la API falla, renderiza "No pudimos conectar con el servidor" con boton **Reintentar** en la seccion de paquetes y vacia el carousel.
+- **Dashboard** (`dashboard.js`): si `/api/auth/me` responde 401 redirige a `index.html` (login). Si el backend o la BD fallan, muestra una pantalla de error completa con **Reintentar** y link al inicio.
 
 ---
 
-*Documento generado para Hard Street - Septiembre 2026*
+## 🔐 Credenciales del seed
+
+`backend/db/seed.sql` pone contraseñas bcrypt:
+
+| Usuario | Email | Contraseña |
+|---|---|---|
+| Admin | `hardstreet7@gmail.com` | `admin123` |
+| Cliente | `karimedzul@hardstreet.com` | `cliente123` |
+
+**Cámbialas en producción** (update a `users.password` con un hash nuevo).
+
+---
+
+## ⚠️ Datos faltantes en la BD (ajustes que pediste comentar)
+
+1. **Contraseñas vacías** — `users.password` estaba `''`. El login real requiere bcrypt: el seed las llena.
+2. **Un solo paquete** — `packages` solo tenía la Boda Premium (id 1). La landing muestra 14 paquetes por categoría/tier: el seed los inserta (ids 2–14) con sus `packages_services`.
+3. **`packages_categories.icon` vacío** — la tabla tiene columna `icon` pero ningún valor. El front usa SVGs propios mientras tanto; cuando la llenes (ej. `icon/heart.svg`), se puede mapear directo.
+4. **`is_extern` nunca usado** — no había paquetes con `is_extern = 1`, así que el carousel "Lo que Ofrecemos" no tenía fuente de datos. El seed crea 6 (ids 21–26).
+5. **`status` global para compras** — `purchased_packages.id_status` apunta a `status`, pero esa tabla era de servicios. Funciona, pero el seed agrega `Pagado(4)` y `Cancelado(5)` para estados de compra.
+6. **`galleries` casi vacía** — 1 solo registro (`urldelitem`, no público). El seed agrega 8 ítems demo ligados a la compra 1 con las imágenes reales del repo.
+7. **`purchased_packages_services.delivery_date` es INTEGER** — hoy parece significar "días de entrega", no una fecha. Si quieres una fecha real: `ALTER TABLE purchased_packages_services ADD COLUMN delivery_date_ts timestamp;`
+8. **Sin contraseñas cifradas ni registro** — no hay endpoint de registro (los clientes los crea el admin). Si quieres self-signup, agrega `POST /api/auth/register`.
+
+---
+
+## 🗄️ Mapa Tabla ↔ Modelo
+
+| Tabla | Modelo | Notas |
+|---|---|---|
+| `packages` | `Package` | + `services` vía `packages_services` |
+| `purchased_packages` | `PurchasedPackage` | + `package` heredado + `services` vía `purchased_packages_services` |
+| `purchased_packages_services` | `PurchasedPackageService` | + `service` + `status` resueltos |
+| `services` | `Service` | icono resuelto a SVG en el front |
+| `tiers` | `Tier` | |
+| `packages_categories` | `PackageCategory` | |
+| `status` | `Status` | usado por servicios y compras |
+| `users` | `User` | password nunca sale del backend |
+| `galleries` | `Gallery` | + `galleryType` resuelto |
+| `users_packages` | (join, no expuesto) | usado por `/api/my/packages` |
+| `roles`, `permissions`, `permissions_roles`, `modules` | `/api/modules` | control de menú por rol |
+| `galleries_types` | (join) | resuelto a `galleryType` string |
+
+---
+
+*Documento generado para Hard Street — Septiembre 2026*

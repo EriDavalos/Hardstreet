@@ -1,0 +1,32 @@
+
+> hardstreet-backend@1.0.0 dev
+> next dev -p 4000
+
+   ▲ Next.js 15.5.25
+   - Local:        http://localhost:4000
+   - Network:      http://192.168.1.70:4000
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 3.6s
+ ✓ Compiled /api/health in 359ms (135 modules)
+ GET /api/health 200 in 1933ms
+ ✓ Compiled /api/categories in 56ms (139 modules)
+ ✓ Compiled (141 modules)
+ OPTIONS /api/categories 200 in 202ms
+ OPTIONS /api/packages 200 in 204ms
+ GET /api/packages 304 in 186ms
+ GET /api/categories 304 in 355ms
+ ✓ Compiled /api/extern-services in 86ms (143 modules)
+ OPTIONS /api/extern-services 200 in 128ms
+ GET /api/extern-services 304 in 141ms
+ GET /api/health 200 in 283ms
+ OPTIONS /api/extern-services 200 in 10ms
+ GET /api/extern-services 304 in 124ms
+ OPTIONS /api/packages 200 in 13ms
+ OPTIONS /api/categories 200 in 22ms
+ GET /api/packages 304 in 134ms
+ GET /api/categories 304 in 489ms
+ OPTIONS /api/extern-services 200 in 8ms
+ GET /api/extern-services 304 in 102ms
+[?25h
