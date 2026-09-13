@@ -1,9 +1,13 @@
 // ==================================================================
-// HARD STREET — Dashboard JavaScript
+// HARD STREET — Dashboard Core (shared by gallery/* modules)
+// Cada página (gallery/home, gallery/package, gallery/photos) define
+// window.DASHBOARD_MODULE y este core inicializa solo lo necesario.
 // Datos REALES desde la API (backend/). Modo estricto: si no hay
 // sesion redirige al login y si el backend falla muestra un error
 // con reintentar — nunca datos demo.
 // ==================================================================
+
+const DASHBOARD_MODULE = window.DASHBOARD_MODULE || 'home';
 
 // ========== BOOT: autenticacion obligatoria ==========
 (async () => {
@@ -13,7 +17,7 @@
   } catch (e) {
     if (e && e.status === 401) {
       // Sin sesion -> de vuelta al landing (abre el modal de login ahi)
-      window.location.href = 'index.html';
+      window.location.href = '../../index.html';
       return;
     }
     showDashboardError(e);
@@ -74,9 +78,10 @@ function init() {
   // Paquete activo: el mas reciente que no este entregado/cancelado; si no, el ultimo
   const active = Store.purchasedPackages.find(p => !['entregado', 'cancelado'].includes(p.status.key));
   currentPkg = active || Store.purchasedPackages[0] || null;
-  renderOverview();
-  renderPackageDetail();
-  renderPhotos();
+  // Cada modulo renderiza solo su parte (los containers no presentes se omiten)
+  if (document.getElementById('overviewPackage')) renderOverview();
+  if (document.getElementById('packageDetail')) renderPackageDetail();
+  if (document.getElementById('photosGrid')) renderPhotos();
   setupTabs();
   setupFilters();
 }
@@ -383,6 +388,7 @@ function renderPackageDetail() {
 // ========== RENDER PHOTOS (desde la galeria real) ==========
 function renderPhotos() {
   const container = document.getElementById('photosGrid');
+  if (!container) return;
   const emptyState = document.getElementById('emptyState');
   const countLabel = document.getElementById('photoCount');
   const readyLabel = document.getElementById('photoReadyCount');
@@ -527,19 +533,17 @@ function updateSelectionCount() {
   downloadBtn.disabled = count === 0;
 }
 
-// ========== SETUP TABS ==========
+// ========== SETUP NAV (navegacion entre modulos) ==========
 function setupTabs() {
+  const routes = { home: '../home/', package: '../package/', photos: '../photos/' };
   const tabs = document.querySelectorAll('.sidebar-item[data-tab]');
   tabs.forEach(tab => {
+    // Estado activo coherente con el modulo actual
+    tab.classList.toggle('active', tab.dataset.tab === DASHBOARD_MODULE);
     tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      const tabName = tab.dataset.tab;
-      document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('active');
-      });
-      document.getElementById(`${tabName}Tab`).classList.add('active');
-      closeSidebar();
+      const target = tab.dataset.tab;
+      if (target === DASHBOARD_MODULE) return;
+      if (routes[target]) window.location.href = routes[target];
     });
   });
 }
@@ -574,20 +578,28 @@ function closeSidebar() {
   document.body.style.overflow = '';
 }
 
-// ========== DOWNLOAD ==========
-document.getElementById('downloadBtn').addEventListener('click', () => {
-  if (selectedPhotos.size === 0) return;
-  const count = selectedPhotos.size;
-  alert(`Descargando ${count} archivo(s)...\n\nEn producción, esto descargaría un ZIP con los archivos seleccionados.`);
-  selectedPhotos.clear();
-  document.querySelectorAll('.photo-card.selected').forEach(card => {
-    card.classList.remove('selected');
-  });
-  updateSelectionCount();
+// Escape cierra el menu lateral (movil)
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeSidebar();
 });
+
+// ========== DOWNLOAD ==========
+const downloadBtnEl = document.getElementById('downloadBtn');
+if (downloadBtnEl) {
+  downloadBtnEl.addEventListener('click', () => {
+    if (selectedPhotos.size === 0) return;
+    const count = selectedPhotos.size;
+    alert(`Descargando ${count} archivo(s)...\n\nEn producción, esto descargaría un ZIP con los archivos seleccionados.`);
+    selectedPhotos.clear();
+    document.querySelectorAll('.photo-card.selected').forEach(card => {
+      card.classList.remove('selected');
+    });
+    updateSelectionCount();
+  });
+}
 
 // ========== LOGOUT ==========
 async function handleLogout() {
   await Store.logout();
-  window.location.href = 'index.html';
+  window.location.href = '../../index.html';
 }

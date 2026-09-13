@@ -6,7 +6,7 @@ Este documento describe los **modelos del frontend** (en inglés, iguales a los 
 
 ## 📦 Modelos del Frontend
 
-Definidos en `js/models.js` y devueltos tal cual por la API (`backend/lib/mappers.ts`).
+Definidos en `gallery/assets/models.js` y devueltos tal cual por la API (`backend/lib/mappers.ts`).
 
 ### Package (catálogo público)
 ```ts
@@ -66,7 +66,7 @@ Gallery { id, url, user, galleryType, purchasedPackage, packageCategory, isPubli
         // galleryType: "image" | "video" | "pdf"
 ```
 
-> Compatibilidad: el frontend resuelve `services.icon` ("icon/video.svg") a un SVG mediante `ServiceIcons` en `js/models.js`. Las claves CSS de categoría/tier se derivan con `categoryKey()` ("XV Años" → "xv-anos").
+> Compatibilidad: el frontend resuelve `services.icon` ("icon/video.svg") a un SVG mediante `ServiceIcons` en `gallery/assets/models.js`. Las claves CSS de categoría/tier se derivan con `categoryKey()` ("XV Años" → "xv-anos").
 
 ---
 
@@ -108,7 +108,7 @@ Next.js carga `backend/.env` automaticamente (DATABASE_URL, JWT_SECRET). En VS C
 3. `NODE_ENV=production` hace la cookie `secure; SameSite=Lax`. Si sirves el front desde **otro dominio**, cambia `sameSite: "lax"` → `"none"` en `backend/lib/auth.ts` para que la cookie cross-site funcione.
 
 ### Conectar el frontend
-En `js/config.js`:
+En `gallery/assets/config.js`:
 ```js
 window.HARDSTREET_API_URL = 'https://tu-backend.vercel.app';
 ```
@@ -118,7 +118,7 @@ Vacio = mismo origen.
 El frontend ya **no tiene datos demo ni fallback local**: todo viene del backend.
 
 - **Landing** (`index.js`): mientras carga muestra el loader; si la API falla, renderiza "No pudimos conectar con el servidor" con boton **Reintentar** en la seccion de paquetes y vacia el carousel.
-- **Dashboard** (`dashboard.js`): si `/api/auth/me` responde 401 redirige a `index.html` (login). Si el backend o la BD fallan, muestra una pantalla de error completa con **Reintentar** y link al inicio.
+- **Dashboard** (`gallery/assets/dashboard-core.js`, usado por `gallery/home/`, `gallery/package/` y `gallery/photos/`): si `/api/auth/me` responde 401 redirige a `index.html` (login). Si el backend o la BD fallan, muestra una pantalla de error completa con **Reintentar** y link al inicio.
 
 ---
 

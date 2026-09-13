@@ -440,7 +440,7 @@ async function handleLogin(e) {
 
   try {
     await Store.login(email, password);
-    window.location.href = 'dashboard.html';
+    window.location.href = 'gallery/home/';
   } catch (err) {
     const msg = err.status === 401
       ? 'Correo o contraseña incorrectos'
@@ -461,7 +461,7 @@ function updateAuthUI() {
   const authBtn = document.getElementById('authBtn');
   if (Store.user) {
     authBtn.textContent = 'Mi Paquete';
-    authBtn.onclick = () => window.location.href = 'dashboard.html';
+    authBtn.onclick = () => window.location.href = 'gallery/home/';
   } else {
     authBtn.textContent = 'Iniciar Sesión';
     authBtn.onclick = () => openModal('loginModal');
