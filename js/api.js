@@ -12,11 +12,26 @@ const API_CONFIG = {
 };
 
 // ---------- HELPERS ----------
+
+// Token JWT en memoria + localStorage. Al loguearse se guarda y de ahi
+// en adelante se manda en cada peticion via header Authorization (Bearer).
+const TOKEN_KEY = 'hs_token';
+let authToken = localStorage.getItem(TOKEN_KEY) || '';
+
+function saveToken(token) {
+  authToken = token || '';
+  try {
+    if (authToken) localStorage.setItem(TOKEN_KEY, authToken);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch (_) {}
+}
+
 async function apiFetch(path, options = {}) {
   const url = API_CONFIG.baseUrl + path;
+  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
   const res = await fetch(url, {
-    credentials: 'include', // envia/recibe la cookie httpOnly de sesion
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     ...options,
   });
   if (!res.ok) {
@@ -24,6 +39,8 @@ async function apiFetch(path, options = {}) {
     try { const j = await res.json(); if (j.error) msg = j.error; } catch (_) {}
     const err = new Error(msg);
     err.status = res.status;
+    // Token invalido/expirado -> limpiarlo para no seguir mandando basura
+    if (res.status === 401 && authToken) saveToken('');
     throw err;
   }
   return res.json();
@@ -92,12 +109,14 @@ const Store = {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
+    saveToken(res.token); // el token viaja ahora en el header Authorization
     this.user = new User(res.user);
     await this.loadUserData();
     return this.user;
   },
 
   async logout() {
+    saveToken('');
     try { await apiFetch('/api/auth/logout', { method: 'POST' }); } catch (_) {}
     this.user = null;
     this.purchasedPackages = [];

@@ -184,7 +184,9 @@ class PurchasedPackage {
   constructor({
     id = 0, name = '', subtitle = '', description = '',
     price = 0, paid = 0, currency = 'MXN',
-    status = null, pkg = null, services = [],
+    status = null,
+    package: pkg = null, // la API manda 'package'; 'pkg' se acepta por compatibilidad
+    services = [],
   } = {}) {
     this.id = id;
     this.name = name;
@@ -202,6 +204,7 @@ class PurchasedPackage {
   get paidFormatted() { return '$' + this.paid.toLocaleString('es-MX'); }
   get pendingAmount() { return Math.max(this.price - this.paid, 0); }
   get tier() { return this.package.tier; }               // para clases tier-premium etc.
+  get tierLabel() { return TierLabels[this.tier.key] || this.tier.name; }
   get categoryKey() { return this.package.categoryKey; }
   get categoryIcon() { return this.package.categoryIcon; }
   get completedCount() { return this.services.filter(s => s.isDone).length; }

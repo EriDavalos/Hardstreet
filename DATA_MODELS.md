@@ -78,9 +78,9 @@ Next.js (API routes) + `pg` + `jose` (JWT) + `bcryptjs`. Desplegable en Vercel t
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
 | GET | `/api/health` | — | Health check (verifica conexión a BD) |
-| POST | `/api/auth/login` | — | Login; setea cookie httpOnly `hs_session` |
-| POST | `/api/auth/logout` | — | Limpia la cookie |
-| GET | `/api/auth/me` | cookie | Usuario de la sesión (User) |
+| POST | `/api/auth/login` | — | Login; devuelve el JWT en el body (`token`) |
+| POST | `/api/auth/logout` | — | Marca fin de sesión (el cliente descarta su token) |
+| GET | `/api/auth/me` | header Authorization: Bearer | Usuario de la sesión (User) |
 | GET | `/api/packages` | — | Catálogo. Filtros: `?extern=true/false`, `?category=boda` |
 | GET | `/api/packages/:id` | — | Un paquete con todo incluido |
 | GET | `/api/categories` | — | Categorías (para los filtros) |
