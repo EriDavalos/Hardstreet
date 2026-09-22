@@ -1,0 +1,820 @@
+/* ============================================================
+   PARA TI — Flor amarilla animada
+   Escena nocturna luminosa · CSS puro + un toque de JS
+   ============================================================ */
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-0: #1a1408;
+  --bg-1: #2e240e;
+  --gold: #ffc700;
+  --gold-soft: #ffe15c;
+  --gold-deep: #d9a400;
+  --amber: #ffb020;
+  --leaf: #5a7a1e;
+  --leaf-dark: #3d5714;
+  --stem: #4a6b1a;
+  --text: #f7ecd2;
+  --muted: rgba(247, 236, 210, .62);
+}
+
+html, body { height: 100%; }
+
+body {
+  font-family: 'Poppins', system-ui, sans-serif;
+  color: var(--text);
+  background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 70%, #120d05 100%);
+  overflow-x: clip;
+  min-height: 100dvh;
+}
+
+/* ============ FONDO: auroras + estrellas ============ */
+.bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+
+.aurora {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  will-change: transform, opacity;
+}
+.aurora.a1 {
+  width: 46vmax; height: 46vmax;
+  top: -18vmax; right: -12vmax;
+  background: radial-gradient(circle, rgba(255, 199, 0, .16), transparent 65%);
+  animation: drift-a 18s ease-in-out infinite alternate;
+}
+.aurora.a2 {
+  width: 42vmax; height: 42vmax;
+  bottom: -16vmax; left: -14vmax;
+  background: radial-gradient(circle, rgba(255, 176, 32, .12), transparent 65%);
+  animation: drift-b 22s ease-in-out infinite alternate;
+}
+.aurora.a3 {
+  width: 30vmax; height: 30vmax;
+  top: 34%; left: 34%;
+  background: radial-gradient(circle, rgba(255, 225, 92, .07), transparent 70%);
+  animation: drift-a 26s ease-in-out infinite alternate-reverse;
+}
+@keyframes drift-a { from { transform: translate(0, 0) scale(1); } to { transform: translate(-6vmax, 4vmax) scale(1.12); } }
+@keyframes drift-b { from { transform: translate(0, 0) scale(1.08); } to { transform: translate(5vmax, -5vmax) scale(1); } }
+
+.star {
+  position: absolute;
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: #fff8e0;
+  box-shadow: 0 0 8px 1px rgba(255, 240, 180, .8);
+  animation: twinkle var(--tw, 3s) ease-in-out var(--td, 0s) infinite;
+}
+@keyframes twinkle {
+  0%, 100% { opacity: .15; transform: scale(.7); }
+  50%      { opacity: 1;   transform: scale(1.15); }
+}
+
+/* Estrellas fugaces ocasionales */
+.shooting-star {
+  position: absolute;
+  top: 12%;
+  left: -14%;
+  width: 110px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 246, 200, 0), rgba(255, 246, 200, .95));
+  box-shadow: 0 0 12px 2px rgba(255, 240, 180, .45);
+  opacity: 0;
+  animation: shoot 11s ease-in 5s infinite;
+}
+.shooting-star.s2 {
+  top: 6%;
+  width: 70px;
+  animation-delay: 13s;
+  animation-duration: 16s;
+}
+@keyframes shoot {
+  0%   { opacity: 0; transform: rotate(14deg) translateX(0); }
+  2%   { opacity: 1; }
+  9%   { opacity: 0; transform: rotate(14deg) translateX(125vw); }
+  100% { opacity: 0; transform: rotate(14deg) translateX(125vw); }
+}
+
+/* ============ ESCENARIO ============ */
+.stage {
+  position: relative;
+  z-index: 1;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(1.2rem, 3vw, 2.5rem) clamp(1rem, 4vw, 3rem) 1rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ---- Título ---- */
+.title { text-align: center; margin-top: clamp(.2rem, 2vh, 1.5rem); }
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: .8rem;
+  font-size: clamp(.62rem, 1.6vw, .74rem);
+  font-weight: 500;
+  letter-spacing: .34em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+  opacity: 0;
+  animation: rise-in .9s ease .2s forwards;
+}
+.eyebrow i {
+  display: inline-block;
+  width: clamp(28px, 7vw, 56px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold));
+}
+.eyebrow i:last-child { transform: scaleX(-1); }
+
+.title h1 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: clamp(2.4rem, 8vw, 4.4rem);
+  line-height: 1.08;
+  margin: .35rem 0 .3rem;
+  letter-spacing: .01em;
+  text-shadow: 0 10px 40px rgba(0, 0, 0, .55);
+  opacity: 0;
+  animation: rise-in 1s ease .45s forwards;
+}
+.flower-glyph {
+  display: inline-block;
+  font-size: .6em;
+  vertical-align: .12em;
+  background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: glyph-spin 14s linear infinite;
+}
+@keyframes glyph-spin { to { transform: rotate(360deg); } }
+
+.subtitle {
+  font-size: clamp(.82rem, 2.4vw, 1rem);
+  font-weight: 300;
+  color: var(--muted);
+  letter-spacing: .04em;
+  opacity: 0;
+  animation: rise-in 1s ease .7s forwards;
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============ ESCENA DE LA FLOR ============ */
+.scene {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  height: clamp(340px, 58vh, 520px);
+  margin: clamp(.4rem, 2vh, 1.2rem) auto 0;
+  flex: 1;
+  min-height: 300px;
+  /* Recorta partículas (pétalos que caen, polen, halos) dentro de la
+     escena — sin esto, extendían la página y aparecía scroll */
+  overflow: hidden;
+}
+
+/* ---- Sol / luna cálida ---- */
+.sun {
+  position: absolute;
+  top: 4%; right: 8%;
+  width: clamp(54px, 12vw, 84px);
+  aspect-ratio: 1;
+  z-index: 0;
+}
+.sun-core {
+  position: absolute; inset: 22%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 35%, #fff3c4, var(--gold) 60%, var(--gold-deep));
+  box-shadow: 0 0 34px 8px rgba(255, 199, 0, .35);
+  animation: sun-breathe 6s ease-in-out infinite;
+}
+@keyframes sun-breathe {
+  0%, 100% { box-shadow: 0 0 30px 6px rgba(255, 199, 0, .3); }
+  50%      { box-shadow: 0 0 52px 14px rgba(255, 199, 0, .48); }
+}
+.sun-rays {
+  position: absolute; inset: -14%;
+  border-radius: 50%;
+  background:
+    repeating-conic-gradient(from 0deg,
+      rgba(255, 199, 0, .22) 0deg 3deg, transparent 3deg 22.5deg);
+  -webkit-mask: radial-gradient(circle, transparent 30%, #000 32%, #000 72%, transparent 74%);
+  mask: radial-gradient(circle, transparent 30%, #000 32%, #000 72%, transparent 74%);
+  animation: rays-spin 40s linear infinite;
+  opacity: .8;
+}
+@keyframes rays-spin { to { transform: rotate(360deg); } }
+.halo {
+  position: absolute; inset: -55%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 199, 0, .12), transparent 60%);
+  animation: halo-pulse 6s ease-in-out infinite;
+}
+@keyframes halo-pulse { 0%, 100% { opacity: .5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.15); } }
+
+/* ---- Colinas y pasto ---- */
+.hill {
+  position: absolute;
+  left: -6%; right: -6%;
+  border-radius: 50% 50% 0 0;
+  z-index: 2;
+}
+.hill-back {
+  bottom: 5%;
+  height: 26%;
+  background: linear-gradient(180deg, #24350c, #1a2708);
+  opacity: .85;
+}
+.hill-front {
+  bottom: 0;
+  height: 22%;
+  background: linear-gradient(180deg, #33511a 0%, #22380e 60%, #16250a 100%);
+  overflow: hidden;
+}
+.grass-blade {
+  position: absolute;
+  bottom: 0;
+  width: 3px;
+  height: var(--gh, 30px);
+  border-radius: 50% 50% 0 0 / 80% 80% 0 0;
+  background: linear-gradient(180deg, #6d9427, #3d5c17);
+  transform-origin: bottom center;
+  animation: grass-sway 3.6s ease-in-out var(--gd, 0s) infinite alternate;
+}
+@keyframes grass-sway {
+  from { transform: rotate(-7deg); }
+  to   { transform: rotate(9deg); }
+}
+
+/* ============ LA PLANTA ============ */
+.plant {
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  width: 200px;
+  height: 300px;
+  transform: translateX(-50%);
+  z-index: 3;
+  transform-origin: bottom center;
+  animation: plant-sway 7s ease-in-out infinite;
+}
+@keyframes plant-sway {
+  0%, 100% { transform: translateX(-50%) rotate(-2.4deg); }
+  50%      { transform: translateX(-50%) rotate(2.4deg); }
+}
+
+/* Tallo: dibuja la línea al cargar */
+.stem {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.stem path {
+  stroke: var(--stem);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-dasharray: 240;
+  stroke-dashoffset: 240;
+  animation: draw-stem 1.6s cubic-bezier(.65, 0, .35, 1) .3s forwards;
+}
+@keyframes draw-stem { to { stroke-dashoffset: 0; } }
+
+/* Hojas — ancladas al tallo: el punto de unión coincide con la curva
+   del SVG (x≈102 arriba, x≈90 abajo). Extienden desde el tallo con
+   `translate` y pivotan en la unión; SOLO se anima `scale` (brote) y
+   `rotate` (vaivén propio), así nada pisa la posición de anclaje. */
+.leaf {
+  position: absolute;
+  width: 64px;
+  height: 26px;
+  scale: 0;
+  z-index: 2;
+}
+/* Vena central */
+.leaf::after {
+  content: '';
+  position: absolute;
+  left: 12%; right: 8%;
+  top: 50%;
+  height: 1px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .32));
+}
+.leaf-l {
+  left: 102px;              /* unión sobre la curva del tallo */
+  top: 146px;
+  translate: -100% 0;       /* el borde derecho toca el tallo */
+  transform-origin: 100% 50%;
+  rotate: 6deg;
+  border-radius: 100% 8% 8% 100% / 50% 50% 50% 50%;
+  background: linear-gradient(to left, #3f5c15, #5a7a1e 45%, #84b435);
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, .18), 0 3px 8px rgba(0, 0, 0, .3);
+  animation:
+    leaf-pop .8s cubic-bezier(.34, 1.56, .64, 1) 1.25s forwards,
+    leaf-sway-l 5.5s ease-in-out 2.1s infinite alternate;
+}
+.leaf-r {
+  left: 90px;
+  top: 184px;
+  width: 56px;
+  height: 23px;
+  transform-origin: 0% 50%;
+  rotate: -8deg;
+  border-radius: 8% 100% 100% 8% / 50% 50% 50% 50%;
+  background: linear-gradient(to right, #3f5c15, #54731c 45%, #7ba72f);
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, .18), 0 3px 8px rgba(0, 0, 0, .3);
+  animation:
+    leaf-pop .8s cubic-bezier(.34, 1.56, .64, 1) 1.45s forwards,
+    leaf-sway-r 6.2s ease-in-out 2.4s infinite alternate;
+}
+@keyframes leaf-pop { to { scale: 1; } }
+@keyframes leaf-sway-l { from { rotate: 6deg; } to { rotate: 12deg; } }
+@keyframes leaf-sway-r { from { rotate: -8deg; } to { rotate: -14deg; } }
+
+/* ============ FLOR ============ */
+.flower {
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  width: var(--fsize);
+  height: var(--fsize);
+  margin-left: calc(var(--fsize) / -2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transform: scale(0);
+  animation: bloom 1.5s cubic-bezier(.3, 1.35, .4, 1) 1.7s forwards;
+  transition: filter .5s ease;
+}
+.flower:hover { filter: brightness(1.08) drop-shadow(0 0 16px rgba(255, 199, 0, .4)); }
+@keyframes bloom { 60% { transform: scale(1.07); } 100% { transform: scale(1); } }
+
+/* Estado de replay: congela las animaciones un instante (JS lo quita
+   a continuación, reiniciando todo el ciclo de crecimiento) */
+.plant.replay .stem path,
+.plant.replay .leaf,
+.plant.replay .flower,
+.plant.replay .ray { animation: none !important; }
+
+/* Corola girando lento */
+.core {
+  position: absolute;
+  inset: 30%;
+  border-radius: 50%;
+  z-index: 3;
+  background: radial-gradient(circle at 36% 32%, #8a5a00, #6b4200 70%);
+  box-shadow:
+    inset 0 -4px 10px rgba(0, 0, 0, .45),
+    inset 0 3px 6px rgba(255, 200, 60, .25),
+    0 0 14px rgba(255, 199, 0, .25);
+  animation: core-spin 26s linear infinite, core-glow 5s ease-in-out 3s infinite;
+}
+@keyframes core-spin { to { transform: rotate(360deg); } }
+@keyframes core-glow {
+  0%, 100% { box-shadow:
+    inset 0 -4px 10px rgba(0, 0, 0, .45),
+    inset 0 3px 6px rgba(255, 200, 60, .25),
+    0 0 14px rgba(255, 199, 0, .25); }
+  50% { box-shadow:
+    inset 0 -4px 10px rgba(0, 0, 0, .45),
+    inset 0 3px 6px rgba(255, 200, 60, .25),
+    0 0 30px rgba(255, 214, 110, .5); }
+}
+
+.core-ring {
+  position: absolute; inset: 18%;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 199, 0, .5);
+}
+.core-dot {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 12%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffd66e, #b07b00);
+  transform: rotate(var(--a, 0deg)) translateX(calc(var(--fsize) * .16)) translateY(-50%);
+}
+
+/* ---- Rayos de pétalos (dos capas girando) ---- */
+.rays {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  animation: rays-turn 30s linear infinite;
+}
+.rays2 { inset: 6%; animation: rays-turn 30s linear -15s infinite reverse; }
+@keyframes rays-turn { to { transform: rotate(360deg); } }
+
+/* Pétalo con silueta real: base afilada que converge al centro,
+   punta redondeada, degradado raíz→punta y vena central. La rotación
+   vive en la propiedad individual `rotate` (--ang la pone JS) y SOLO
+   `scale` se anima — así la animación nunca pisa la rotación. */
+.ray {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--fsize) * .46);
+  height: calc(var(--fsize) * .21);
+  margin-top: calc(var(--fsize) * -.105); /* centrado vertical sobre el ancla */
+  transform-origin: 0 50%;
+  rotate: var(--ang, 0deg);
+  scale: .2;
+  border-radius: 72% 50% 50% 72% / 50% 50% 50% 50%;
+  background:
+    linear-gradient(90deg, rgba(146, 84, 0, .5) 0%, rgba(146, 84, 0, 0) 34%),
+    linear-gradient(180deg, #ffe15c 0%, #ffc700 52%, #dfa200 100%);
+  box-shadow:
+    inset 0 -4px 8px rgba(190, 110, 0, .38),
+    inset 0 3px 5px rgba(255, 255, 255, .28),
+    0 0 10px rgba(255, 199, 0, .18);
+  opacity: 0;
+  animation: petal-bloom .7s cubic-bezier(.3, 1.4, .5, 1) forwards;
+}
+/* Vena central sutil */
+.ray::after {
+  content: '';
+  position: absolute;
+  left: 16%;
+  right: 10%;
+  top: 50%;
+  height: 1px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, rgba(140, 80, 0, .45), rgba(255, 244, 170, .4));
+  border-radius: 999px;
+}
+/* Capa trasera: más larga y oscura, asoma entre los pétalos frontales */
+.rays2 { z-index: 0; }
+.rays2 .ray {
+  width: calc(var(--fsize) * .5);
+  height: calc(var(--fsize) * .22);
+  margin-top: calc(var(--fsize) * -.11);
+  filter: brightness(.82) saturate(1.15);
+}
+@keyframes petal-bloom {
+  60% { opacity: 1; scale: 1.12; }
+  100% { opacity: 1; scale: 1; }
+}
+
+/* Destello dorado al tocar */
+.burst {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--gold-soft);
+  transform: translate(-50%, -50%) scale(.3);
+  opacity: 0;
+  pointer-events: none;
+  animation: burst .8s cubic-bezier(.2, .7, .3, 1) forwards;
+  z-index: 5;
+}
+@keyframes burst {
+  0%   { opacity: 1; transform: translate(-50%, -50%) scale(.3); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(4.2); }
+}
+
+/* Partículas de polen (creadas por JS) */
+.pollen {
+  position: absolute;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--gold-soft);
+  box-shadow: 0 0 8px 2px rgba(255, 225, 92, .8);
+  pointer-events: none;
+  z-index: 6;
+  animation: pollen-float var(--dur, 4.5s) ease-out var(--del, 0s) forwards;
+}
+@keyframes pollen-float {
+  0%   { opacity: 0; transform: translate(0, 0) scale(1); }
+  12%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--px), var(--py)) scale(.3); }
+}
+
+/* Pétalo que cae — misma silueta que los de la flor */
+.falling-petal {
+  position: absolute;
+  width: 18px; height: 9px;
+  border-radius: 72% 50% 50% 72% / 50% 50% 50% 50%;
+  background:
+    linear-gradient(90deg, rgba(146, 84, 0, .4) 0%, rgba(146, 84, 0, 0) 36%),
+    linear-gradient(180deg, var(--gold-soft) 0%, var(--gold) 55%, var(--amber) 100%);
+  box-shadow: inset 0 -2px 4px rgba(190, 110, 0, .4), 0 2px 6px rgba(0, 0, 0, .35);
+  pointer-events: none;
+  z-index: 7;
+  opacity: .95;
+  animation: petal-fall var(--fdur, 7s) linear var(--fdel, 0s) forwards;
+}
+@keyframes petal-fall {
+  0%   { opacity: 0;  transform: translate(0, 0) rotate(0deg); }
+  8%   { opacity: .95; }
+  25%  { transform: translate(calc(var(--sw) * 1), calc(var(--fall) * .25)) rotate(160deg); }
+  50%  { transform: translate(calc(var(--sw) * -1), calc(var(--fall) * .5)) rotate(80deg); }
+  75%  { transform: translate(calc(var(--sw) * 1.4), calc(var(--fall) * .78)) rotate(220deg); }
+  85%  { opacity: .6; }
+  100% { opacity: 0; transform: translate(calc(var(--sw) * 1.2), var(--fall)) rotate(360deg); }
+}
+
+/* Palabras flotantes */
+.floating-word {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: clamp(1.1rem, 4.5vw, 1.7rem);
+  color: var(--gold-soft);
+  text-shadow: 0 0 18px rgba(255, 199, 0, .5), 0 4px 14px rgba(0, 0, 0, .5);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 8;
+  animation: word-rise 2.8s cubic-bezier(.22, .8, .3, 1) forwards;
+}
+@keyframes word-rise {
+  0%   { opacity: 0; transform: translate(-50%, -40%) scale(.6) rotate(var(--wr, 0deg)); }
+  18%  { opacity: 1; transform: translate(-50%, -70%) scale(1) rotate(var(--wr, 0deg)); }
+  75%  { opacity: .9; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--wx, 0px)), calc(-150% + var(--wy, -60px))) scale(.92) rotate(var(--wr, 0deg)); }
+}
+
+/* ============ COMPAÑEROS ============ */
+/* Mariposa */
+.butterfly {
+  position: absolute;
+  top: 20%;
+  left: 12%;
+  width: 34px;
+  height: 26px;
+  z-index: 4;
+  animation:
+    fly-path-a 17s ease-in-out infinite,
+    flap-tilt 3.2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .4));
+}
+@keyframes fly-path-a {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(210px, -50px); }
+  50%  { transform: translate(90px, 30px); }
+  75%  { transform: translate(300px, 60px); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes flap-tilt { 0%, 100% { rotate: -8deg; } 50% { rotate: 10deg; } }
+
+.wing {
+  position: absolute;
+  top: 0;
+  width: 15px;
+  height: 22px;
+  border-radius: 80% 80% 60% 60% / 100% 100% 40% 40%;
+  background: linear-gradient(140deg, #ffd66e, #f0a500 75%);
+  box-shadow: inset 0 0 0 1px rgba(120, 70, 0, .35);
+  animation: flap .32s ease-in-out infinite alternate;
+}
+.wing.wl { left: 0; transform-origin: right center; }
+.wing.wr { right: 0; transform: scaleX(-1); transform-origin: right center; animation-name: flap-r; }
+@keyframes flap   { from { transform: rotateY(10deg)  scaleX(1); }  to { transform: rotateY(65deg)  scaleX(.55); } }
+@keyframes flap-r { from { transform: scaleX(-1) rotateY(10deg); }  to { transform: scaleX(-1) rotateY(65deg); } }
+.b-body {
+  position: absolute;
+  left: 50%; top: 18%;
+  width: 5px; height: 20px;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 40% 40% / 60% 60% 40% 40%;
+  background: linear-gradient(180deg, #4a3208, #2b1d04);
+}
+
+/* Abejas — cuerpo rayado con cabeza, ojo y dos alas translúcidas */
+.bee {
+  position: absolute;
+  width: 26px;
+  height: 20px;
+  z-index: 4;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, .4));
+}
+.bee-body {
+  position: absolute;
+  left: 6px; top: 5px;
+  width: 16px; height: 11px;
+  border-radius: 45% 55% 55% 45% / 55% 65% 65% 55%;
+  background:
+    repeating-linear-gradient(100deg, #2e2005 0 2.5px, #ffc700 2.5px 5.5px);
+  box-shadow:
+    inset -2px -2px 4px rgba(0, 0, 0, .35),
+    inset 2px 2px 3px rgba(255, 255, 255, .22);
+}
+.bee-head {
+  position: absolute;
+  left: 0; top: 6px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #4a3a10, #241a05 72%);
+}
+.bee-head::after {
+  content: '';
+  position: absolute;
+  left: 2px; top: 2.5px;
+  width: 2px; height: 2px;
+  border-radius: 50%;
+  background: #fff8e0;
+  opacity: .9;
+}
+.bee .wing {
+  top: -4px;
+  width: 12px; height: 8px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .7), rgba(255, 255, 255, .15));
+  border: 1px solid rgba(255, 255, 255, .4);
+  border-radius: 60% 60% 45% 45% / 75% 75% 35% 35%;
+  transform-origin: 50% 95%;
+  animation: buzz .16s ease-in-out infinite alternate;
+}
+.bee .wing.wl { left: 6px; }
+.bee .wing.wr { left: 11px; transform: none; animation-delay: -.08s; }
+@keyframes buzz {
+  from { transform: rotate(-16deg) scaleY(1); }
+  to   { transform: rotate(12deg) scaleY(.55); }
+}
+/* Estela dorada que sigue a cada abeja (misma ruta, con retardo) */
+.bee-trail {
+  position: absolute;
+  width: 5px; height: 5px;
+  margin: 8px 0 0 11px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 214, 110, .85), rgba(255, 214, 110, 0) 70%);
+  pointer-events: none;
+  z-index: 3;
+}
+.bee-trail::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: inherit;
+  opacity: .55;
+  translate: -9px 3px;
+}
+.trail-a { top: 38%; left: 66%; animation: bee-path-a 11s ease-in-out .12s infinite; }
+.trail-b { top: 30%; left: 40%; animation: bee-path-b 14s ease-in-out 1.32s infinite; opacity: .85; }
+.bee-a { top: 38%; left: 66%; animation: bee-path-a 11s ease-in-out infinite; }
+.bee-b { top: 30%; left: 40%; animation: bee-path-b 14s ease-in-out 1.2s infinite; opacity: .9; }
+@keyframes bee-path-a {
+  0%, 100% { transform: translate(0, 0); }
+  30%      { transform: translate(-120px, 40px); }
+  60%      { transform: translate(-40px, 90px); }
+}
+@keyframes bee-path-b {
+  0%, 100% { transform: translate(0, 0) scale(.9); }
+  40%      { transform: translate(130px, 70px) scale(.9); }
+  70%      { transform: translate(60px, -20px) scale(.9); }
+}
+
+/* Luciérnagas */
+.firefly {
+  position: absolute;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: #fff6c8;
+  box-shadow: 0 0 10px 3px rgba(255, 240, 160, .9);
+  z-index: 4;
+  animation: firefly-glow 2.4s ease-in-out var(--fd, 0s) infinite, firefly-path 13s ease-in-out var(--fd, 0s) infinite;
+}
+@keyframes firefly-glow {
+  0%, 100% { opacity: .1; }
+  50%      { opacity: 1; }
+}
+@keyframes firefly-path {
+  0%, 100% { left: var(--fx1); top: var(--fy1); }
+  50%      { left: var(--fx2); top: var(--fy2); }
+}
+
+/* Destello junto al tallo */
+.sway-note {
+  position: absolute;
+  left: -46px;
+  top: 190px;
+  width: 22px;
+  height: 22px;
+  background: radial-gradient(circle, rgba(255, 225, 92, .9), transparent 65%);
+  border-radius: 50%;
+  animation: note-blink 5s ease-in-out infinite;
+  z-index: 2;
+}
+@keyframes note-blink {
+  0%, 100% { opacity: 0; transform: scale(.4); }
+  50%      { opacity: .8; transform: scale(1); }
+}
+
+/* ============ HUD INFERIOR ============ */
+.hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  max-width: 640px;
+  margin: 1.4rem auto 0;
+  padding-bottom: calc(.6rem + env(safe-area-inset-bottom));
+  opacity: 0;
+  animation: rise-in .9s ease 1s forwards;
+}
+.back-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: .85rem;
+  letter-spacing: .05em;
+  padding: .55rem .9rem;
+  border: 1px solid rgba(255, 225, 92, .25);
+  border-radius: 999px;
+  transition: color .25s, border-color .25s, background .25s;
+}
+.back-link:hover { color: var(--gold-soft); border-color: rgba(255, 225, 92, .6); background: rgba(255, 199, 0, .06); }
+
+.replant {
+  font-family: 'Poppins', sans-serif;
+  font-size: .88rem;
+  font-weight: 500;
+  letter-spacing: .03em;
+  color: #241a05;
+  background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+  border: none;
+  border-radius: 999px;
+  padding: .7rem 1.4rem;
+  cursor: pointer;
+  box-shadow: 0 6px 22px rgba(255, 199, 0, .3);
+  transition: transform .25s cubic-bezier(.34, 1.56, .64, 1), box-shadow .25s;
+  position: relative;
+  overflow: hidden;
+}
+.replant::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -80%;
+  width: 55%; height: 100%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, .55), transparent);
+  transform: skewX(-20deg);
+  transition: left .6s ease;
+}
+.replant:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 10px 30px rgba(255, 199, 0, .45); }
+.replant:hover::after { left: 130%; }
+.replant:active { transform: scale(.96); }
+
+.hint {
+  font-size: .78rem;
+  font-weight: 300;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: right;
+  transition: opacity .4s;
+}
+.hint.done { opacity: 0; }
+
+.credit {
+  margin-top: .9rem;
+  font-size: .72rem;
+  font-weight: 300;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(247, 236, 210, .35);
+  opacity: 0;
+  animation: rise-in 1s ease 1.6s forwards;
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 640px) {
+  .stage { padding: 1.2rem .9rem .8rem; }
+  .hud { flex-wrap: wrap; justify-content: center; row-gap: .7rem; }
+  .hint { width: 100%; text-align: center; order: 3; }
+  .replant { order: 1; }
+  .back-link { order: 2; }
+  .scene { height: clamp(360px, 56vh, 460px); }
+  .butterfly { left: 4%; }
+  .bee-a { left: 58%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  .flower { animation: none; transform: scale(1); }
+  .stem path { stroke-dashoffset: 0; }
+  .leaf { scale: 1; }
+  .ray { opacity: 1; scale: 1; animation: none; }
+  .hud, .credit, .eyebrow, .title h1, .subtitle { opacity: 1; animation: none; }
+}

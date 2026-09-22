@@ -334,20 +334,28 @@ function renderExternCarousel() {
 
   container.innerHTML = services.map((service, index) => `
     <div class="extern-slide ${index === 0 ? 'active' : ''}">
-      <div class="extern-slide-image">
-        <img src="${imageForPackage(service, index)}" alt="${service.name}" loading="lazy" />
+      <div class="extern-slide-media">
+        <div class="extern-slide-image">
+          <img src="${imageForPackage(service, index)}" alt="${service.name}" loading="lazy" />
+        </div>
+        <div class="extern-slide-medal">${service.categoryIcon}</div>
       </div>
       <div class="extern-slide-content">
-        <div class="extern-slide-icon">${service.categoryIcon}</div>
-        <h3 class="extern-slide-title">${service.name}</h3>
         <p class="extern-slide-subtitle">${service.subtitle}</p>
+        <h3 class="extern-slide-title">${service.name}</h3>
         <p class="extern-slide-desc">${service.description}</p>
         <ul class="extern-slide-features">
           ${service.services.slice(0, 4).map(s => `<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>${s.name}</li>`).join('')}
         </ul>
-        <div class="extern-slide-price">
-          <span class="extern-slide-price-label">Inversión</span>
-          <span class="extern-slide-price-value">Desde ${service.priceFormatted}</span>
+        <div class="extern-slide-actions">
+          <div class="extern-slide-price">
+            <span class="extern-slide-price-label">Inversión</span>
+            <span class="extern-slide-price-value">Desde ${service.priceFormatted}</span>
+          </div>
+          <a class="extern-slide-cta" href="#contact">
+            Consultar
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
         </div>
       </div>
     </div>
@@ -356,6 +364,9 @@ function renderExternCarousel() {
   dotsContainer.innerHTML = services.map((_, index) => `
     <span class="extern-dot ${index === 0 ? 'active' : ''}" onclick="goToExternSlide(${index})"></span>
   `).join('');
+
+  const counter = document.getElementById('externCounter');
+  if (counter) counter.innerHTML = `<span>01</span> / ${String(services.length).padStart(2, '0')}`;
 }
 
 function showExternSlide(index) {
@@ -366,6 +377,8 @@ function showExternSlide(index) {
   dotsEls.forEach(d => d.classList.remove('active'));
   slides[index].classList.add('active');
   if (dotsEls[index]) dotsEls[index].classList.add('active');
+  const counter = document.getElementById('externCounter');
+  if (counter) counter.innerHTML = `<span>${String(index + 1).padStart(2, '0')}</span> / ${String(slides.length).padStart(2, '0')}`;
   currentExternSlide = index;
 }
 
@@ -385,6 +398,20 @@ function goToExternSlide(index) { showExternSlide(index); }
 setInterval(() => {
   if (document.querySelectorAll('.extern-slide').length > 1) nextExternSlide();
 }, 6000);
+
+// Swipe tactil en el carrusel de servicios (movil)
+(() => {
+  const carousel = document.querySelector('.extern-carousel');
+  if (!carousel) return;
+  let startX = null;
+  carousel.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, { passive: true });
+  carousel.addEventListener('touchend', (e) => {
+    if (startX === null) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 50) (dx < 0 ? nextExternSlide() : prevExternSlide());
+    startX = null;
+  }, { passive: true });
+})();
 
 // Carga independiente de los externos: si falla, muestra el error SOLO en esta seccion
 async function loadExtern() {
