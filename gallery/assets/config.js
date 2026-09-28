@@ -7,6 +7,6 @@
 // (no hay datos demo de respaldo).
 //
 // Ejemplos:
-window.HARDSTREET_API_URL = 'http://192.168.1.70:4000';            // backend local
-//window.HARDSTREET_API_URL = 'https://apihardstreet.vercel.app'; // backend en Vercel
+//window.HARDSTREET_API_URL = 'http://192.168.1.70:4000';            // backend local
+window.HARDSTREET_API_URL = 'https://apihardstreet.vercel.app'; // backend en Vercel
 //window.HARDSTREET_API_URL = ''; // mismo origen (sirviendo front y API juntos)

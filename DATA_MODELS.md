@@ -72,7 +72,32 @@ Gallery { id, url, user, galleryType, purchasedPackage, packageCategory, isPubli
 
 ## 🚀 Backend (`backend/`)
 
-Next.js (API routes) + `pg` + `jose` (JWT) + `bcryptjs`. Desplegable en Vercel tal cual.
+Next.js (API routes) + **`mysql2`** (MySQL 8, esquema `hardstreet` en 192.168.1.72:3306) + `jose` (JWT) + `bcryptjs`. El JWT viaja en el header `Authorization: Bearer` (sin cookies).
+
+Variables de entorno: `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE` (o `DATABASE_URL` tipo `mysql://user:pass@host:3306/hardstreet`) y `JWT_SECRET`.
+
+### Endpoints de administración (solo rol Admin)
+Usados por el panel `Hardstreet_Admin/` (Flutter), contra la MISMA API que la web.
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/admin/users` | Lista usuarios con rol y `roleId` |
+| POST | `/api/admin/users` | Crea usuario `{name, lastname?, number?, email, password, id_role?}` |
+| PUT | `/api/admin/users` | Actualiza `{id, ...campos?, password?, id_role?}` |
+| DELETE | `/api/admin/users?id=N` | Baja lógica (`active=0`); no permite auto-eliminarse |
+| GET | `/api/admin/roles` | Roles con `permissions: [{moduleId, permissionId}]` |
+| POST | `/api/admin/roles` | Crea rol `{name, permissions?}` |
+| PUT | `/api/admin/roles` | Renombra y/o REEMPLAZA el set de permisos `{id, name?, permissions?}` |
+| DELETE | `/api/admin/roles?id=N` | Baja lógica; 409 si hay usuarios con ese rol |
+| GET | `/api/admin/meta` | Árbol `grupos→módulos→acciones` (sincroniza módulos admin en `modules`) |
+| GET | `/api/admin/clients` | Usuarios con rol fijo `Client` + `packagesCount` |
+| POST | `/api/admin/clients` | Crea cliente (rol asignado automáticamente) |
+| PUT | `/api/admin/clients` | Actualiza cliente `{id, ...}` (sin rol) |
+| DELETE | `/api/admin/clients?id=N` | Baja lógica del cliente |
+| GET | `/api/admin/client-packages?userId=N` | Paquetes del cliente + catálogo para asignar |
+| POST | `/api/admin/client-packages` | `{userId, packageId}` crea compra desde catálogo (copia servicios) · `{userId, purchasedPackageId}` asigna compra existente · `{userId, usersPackageId}` quita el paquete |
+
+> El árbol de permisos del modal (grupos **Operación / Catálogos / Administración**) se define en `Hardstreet-Backend/lib/admin-modules.ts`; los IDs de módulo/permiso se resuelven contra la BD.
 
 ### Endpoints
 | Método | Ruta | Auth | Descripción |
@@ -87,8 +112,8 @@ Next.js (API routes) + `pg` + `jose` (JWT) + `bcryptjs`. Desplegable en Vercel t
 | GET | `/api/tiers` | — | Tiers |
 | GET | `/api/services` | — | Catálogo de servicios |
 | GET | `/api/extern-services` | — | Servicios externos (carousel, `is_extern=1`) |
-| GET | `/api/my/packages` | cookie | **PurchasedPackages del usuario** (dashboard) |
-| GET | `/api/my/gallery` | cookie | Galería del usuario |
+| GET | `/api/my/packages` | header Bearer | **PurchasedPackages del usuario** (dashboard) |
+| GET | `/api/my/gallery` | header Bearer | Galería del usuario |
 | GET | `/api/public/gallery` | — | Galería pública (landing) |
 | GET | `/api/modules` | opcional | Módulos del sidebar con permisos por rol |
 
