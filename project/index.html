@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0716">
+  <title>¡Feliz Cumpleaños, Ivy! 🎂</title>
+  <meta name="description" content="Una felicitación de cumpleaños interactiva: confeti, globos, pastel con velas y una carta para Ivy.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="project.css?v=2">
+  <noscript>
+    <style>
+      /* Sin JavaScript: se muestra todo el contenido, sin intro. */
+      #intro { display: none !important; }
+      body .stage { opacity: 1 !important; transform: none !important; }
+      .reveal { opacity: 1 !important; transform: none !important; }
+    </style>
+  </noscript>
+</head>
+<body>
+
+  <!-- ===================== Ilustraciones (respaldo vectorial) =====================
+       Si colocas mascots/mushu.png y mascots/cinnamon.png, el script las usará
+       automáticamente en lugar de estos dibujos. Ver mascots/README.md -->
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="art-mushu" viewBox="0 0 200 200">
+      <!-- aleta de la cola -->
+      <path d="M34 122 C 18 114, 12 90, 25 79 C 34 94, 39 109, 34 122 Z"
+            fill="#b3232f" stroke="#7c1620" stroke-width="3" stroke-linejoin="round"/>
+
+      <!-- cuerpo largo: contorno + relleno -->
+      <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M92 74 C 104 92, 112 112, 118 132 C 122 148, 118 162, 104 168 C 84 176, 56 172, 40 158 C 26 146, 24 128, 32 118" stroke="#7c1620" stroke-width="34"/>
+        <path d="M92 74 C 104 92, 112 112, 118 132 C 122 148, 118 162, 104 168 C 84 176, 56 172, 40 158 C 26 146, 24 128, 32 118" stroke="#d33a3a" stroke-width="28"/>
+        <!-- panza amarilla con segmentos -->
+        <path d="M87 80 C 99 98, 107 118, 113 138 C 117 152, 113 164, 99 170 C 81 176, 57 172, 43 158" stroke="#f3cd6b" stroke-width="13"/>
+        <path d="M87 80 C 99 98, 107 118, 113 138 C 117 152, 113 164, 99 170 C 81 176, 57 172, 43 158" stroke="#d9a441" stroke-width="13" stroke-dasharray="2.2 11"/>
+      </g>
+      <!-- cresta del lomo -->
+      <path d="M101 67 C 113 85, 121 105, 127 125 C 131 141, 127 155, 113 161"
+            fill="none" stroke="#a81f2e" stroke-width="7" stroke-linecap="round" stroke-dasharray="0.1 13"/>
+
+      <!-- patas y garras -->
+      <g fill="none" stroke-linecap="round">
+        <path d="M102 156 C 98 170, 90 178, 80 182" stroke="#7c1620" stroke-width="22"/>
+        <path d="M102 156 C 98 170, 90 178, 80 182" stroke="#d33a3a" stroke-width="16"/>
+        <path d="M118 156 C 126 168, 136 176, 146 178" stroke="#7c1620" stroke-width="22"/>
+        <path d="M118 156 C 126 168, 136 176, 146 178" stroke="#d33a3a" stroke-width="16"/>
+        <!-- brazos -->
+        <path d="M96 104 C 84 110, 76 120, 74 130" stroke="#7c1620" stroke-width="17"/>
+        <path d="M96 104 C 84 110, 76 120, 74 130" stroke="#d33a3a" stroke-width="11"/>
+        <path d="M110 114 C 118 122, 122 132, 122 142" stroke="#7c1620" stroke-width="17"/>
+        <path d="M110 114 C 118 122, 122 132, 122 142" stroke="#d33a3a" stroke-width="11"/>
+      </g>
+      <g stroke="#f2a3b4" stroke-width="3.6" stroke-linecap="round" fill="none">
+        <path d="M74 182 l-2 8 M82 183 l1 8 M89 181 l4 7"/>
+        <path d="M140 178 l-1 8 M147 176 l3 7 M152 179 l6 5"/>
+        <path d="M68 128 l-8 2 M70 135 l-8 6 M76 138 l-4 8"/>
+        <path d="M118 142 l-1 8 M124 142 l3 8 M129 147 l7 4"/>
+      </g>
+
+      <!-- cresta azul -->
+      <g fill="#3f5fb0" stroke="#7c1620" stroke-width="3" stroke-linejoin="round">
+        <path d="M70 24 L60 3 L81 17 Z"/>
+        <path d="M88 20 L84 0 L102 17 Z"/>
+        <path d="M104 27 L117 8 L117 31 Z"/>
+      </g>
+      <!-- cuernos -->
+      <g stroke="#f3cd6b" stroke-width="6.5" fill="none" stroke-linecap="round">
+        <path d="M110 33 C 128 25, 142 27, 150 35"/>
+        <path d="M112 45 C 130 41, 144 46, 152 54"/>
+      </g>
+      <!-- cabeza + hocico en una sola silueta (sin costura) -->
+      <path d="M76 20 C 96 20, 106 34, 106 51 C 106 66, 96 79, 81 82 C 70 84, 59 81, 52 77 C 40 75, 22 73, 15 68 C 6 63, 8 49, 17 46 C 27 43, 46 44, 56 45 C 58 36, 63 25, 76 20 Z"
+            fill="#d33a3a" stroke="#7c1620" stroke-width="4" stroke-linejoin="round"/>
+      <!-- boca abierta -->
+      <path d="M18 61 C 28 76, 47 78, 59 72 C 48 66, 31 62, 18 61 Z" fill="#8c1c26" stroke="#7c1620" stroke-width="3" stroke-linejoin="round"/>
+      <!-- mandíbula con lengua -->
+      <path d="M20 68 C 30 88, 52 90, 64 79 C 62 75, 60 71, 58 69 C 45 74, 31 72, 20 68 Z"
+            fill="#d33a3a" stroke="#7c1620" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M27 76 C 35 83, 49 84, 57 79 C 49 77, 35 76, 27 76 Z" fill="#e8708e"/>
+      <!-- colmillos -->
+      <path d="M27 63 l4 9 l7 -9 z M43 66 l4 9 l7 -9 z" fill="#fff"/>
+      <!-- nariz -->
+      <ellipse cx="18" cy="55" rx="8.5" ry="7" fill="#a81f2e" stroke="#7c1620" stroke-width="2.5"/>
+      <!-- ojo -->
+      <ellipse cx="82" cy="44" rx="13" ry="15" fill="#fff" stroke="#7c1620" stroke-width="3.5"/>
+      <circle cx="83" cy="45" r="7" fill="#57b05a"/>
+      <circle cx="83" cy="45" r="3.2" fill="#20150f"/>
+      <circle cx="80" cy="41" r="2.4" fill="#fff"/>
+      <!-- bigotes rizados -->
+      <g stroke="#f3cd6b" stroke-width="2.6" fill="none" stroke-linecap="round">
+        <path d="M22 49 C 8 41, 6 23, 19 15"/>
+        <path d="M25 65 C 11 73, 9 91, 22 99"/>
+      </g>
+    </symbol>
+
+    <symbol id="art-blossom" viewBox="0 0 24 24">
+      <g fill="#ffd7e6">
+        <g transform="rotate(0 12 12)"><ellipse cx="12" cy="6.4" rx="3.5" ry="4.7"/></g>
+        <g transform="rotate(72 12 12)"><ellipse cx="12" cy="6.4" rx="3.5" ry="4.7"/></g>
+        <g transform="rotate(144 12 12)"><ellipse cx="12" cy="6.4" rx="3.5" ry="4.7"/></g>
+        <g transform="rotate(216 12 12)"><ellipse cx="12" cy="6.4" rx="3.5" ry="4.7"/></g>
+        <g transform="rotate(288 12 12)"><ellipse cx="12" cy="6.4" rx="3.5" ry="4.7"/></g>
+      </g>
+      <circle cx="12" cy="12" r="2.2" fill="#ffe9a8"/>
+    </symbol>
+
+    <symbol id="art-cinnamon" viewBox="0 0 230 200">
+      <g stroke="#6b4736" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round" fill="#fffdfd">
+        <!-- orejas larguísimas y caídas -->
+        <path d="M92 42 C 60 27, 22 37, 16 57 C 12 72, 26 82, 40 75 C 62 65, 74 59, 94 63 Z"/>
+        <path d="M138 42 C 170 27, 208 37, 214 57 C 218 72, 204 82, 190 75 C 168 65, 156 59, 136 63 Z"/>
+        <!-- cola rizada -->
+        <path d="M68 146 c -22 -1, -28 -22, -10 -27 c 15 -4, 23 10, 9 15"/>
+        <!-- cuerpo -->
+        <path d="M115 102 C 85 102, 71 120, 71 140 C 71 160, 91 172, 115 172 C 139 172, 159 160, 159 140 C 159 120, 145 102, 115 102 Z"/>
+        <!-- patitas delanteras -->
+        <ellipse cx="93" cy="164" rx="14" ry="11"/>
+        <ellipse cx="137" cy="164" rx="14" ry="11"/>
+        <!-- cabeza -->
+        <path d="M115 24 C 155 24, 172 46, 172 73 C 172 100, 148 116, 115 116 C 82 116, 58 100, 58 73 C 58 46, 75 24, 115 24 Z"/>
+      </g>
+
+      <!-- ojos azules -->
+      <ellipse cx="93" cy="70" rx="7.5" ry="10.5" fill="#4ec3ee"/>
+      <ellipse cx="137" cy="70" rx="7.5" ry="10.5" fill="#4ec3ee"/>
+      <!-- mejillas -->
+      <ellipse cx="71" cy="86" rx="11" ry="7.5" fill="#ffb3cc"/>
+      <ellipse cx="159" cy="86" rx="11" ry="7.5" fill="#ffb3cc"/>
+      <!-- boquita abierta -->
+      <path d="M106 84 Q115 82 124 84 Q120 101 115 101 Q110 101 106 84 Z" fill="#fff" stroke="#6b4736" stroke-width="4.5" stroke-linejoin="round"/>
+      <path d="M109 94 Q115 93 121 94 Q119 100 115 100 Q111 100 109 94 Z" fill="#ff9db8"/>
+    </symbol>
+  </svg>
+
+  <!-- Confeti / partículas (canvas) -->
+  <canvas id="fx" aria-hidden="true"></canvas>
+
+  <!-- Fondo: auroras, estrellas, farolitos, nubes y flores -->
+  <div class="bg" aria-hidden="true">
+    <div class="aurora a1"></div>
+    <div class="aurora a2"></div>
+    <div class="aurora a3"></div>
+    <div class="stars" id="stars"></div>
+    <div class="lanterns" id="lanterns"></div>
+    <div class="clouds" id="clouds"></div>
+    <div class="blossoms" id="blossoms"></div>
+    <div class="shooting-star"></div>
+    <div class="shooting-star s2"></div>
+  </div>
+
+  <!-- Destello que sigue al cursor -->
+  <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+
+  <!-- ============ INTRO: el regalo ============ -->
+  <div class="intro" id="intro">
+    <div class="intro-inner">
+      <p class="intro-eyebrow">Hoy es un día especial</p>
+      <h1 class="intro-title">Tienes una sorpresa</h1>
+      <button class="gift" id="giftBtn" type="button" aria-label="Abrir la sorpresa">
+        <span class="gift-box" aria-hidden="true">
+          <span class="gift-glow"></span>
+          <span class="gift-body"></span>
+          <span class="gift-lid"></span>
+          <span class="gift-ribbon"></span>
+          <span class="gift-bow"></span>
+        </span>
+      </button>
+      <p class="intro-hint" id="introHint">Toca el regalo para abrirlo</p>
+    </div>
+  </div>
+
+  <!-- ============ CONTENIDO ============ -->
+  <main class="stage" id="stage">
+
+    <!-- HERO -->
+    <section class="hero" id="hero">
+      <div class="balloons" id="balloons"></div>
+
+      <div class="hero-mascots" aria-hidden="true">
+        <div class="mascot mascot--left mascot--hero" data-mascot="mushu">
+          <img class="mascot-img" alt="" hidden>
+          <svg class="mascot-art" viewBox="0 0 200 200"><use href="#art-mushu"></use></svg>
+        </div>
+        <div class="mascot mascot--right mascot--hero" data-mascot="cinnamon">
+          <img class="mascot-img" alt="" hidden>
+          <svg class="mascot-art" viewBox="0 0 200 200"><use href="#art-cinnamon"></use></svg>
+        </div>
+      </div>
+
+      <div class="hero-content">
+        <span class="eyebrow"><i></i>Feliz Cumpleaños<i></i></span>
+        <h1 class="hero-title">¡Feliz<br><span>Cumpleaños!</span></h1>
+        <p class="hero-name" data-name>Ivy</p>
+        <p class="hero-type"><span id="typed"></span><span class="caret" aria-hidden="true"></span></p>
+
+        <div class="hero-actions">
+          <button class="btn primary" id="wishBtn" type="button">Lanzar deseos ✨</button>
+          <button class="btn ghost" id="musicBtn" type="button" aria-pressed="false">Música ♪</button>
+        </div>
+
+        <p class="hero-tip">Toca en cualquier parte para soltar confeti · Revienta los globos 🎈</p>
+      </div>
+
+      <div class="scroll-cue" aria-hidden="true"><span>Desliza</span><i></i></div>
+    </section>
+
+    <!-- PASTEL -->
+    <section class="section cake-section reveal" id="cake">
+      <p class="section-label">Momento sagrado</p>
+      <h2 class="section-title">Pide un deseo</h2>
+      <p class="section-desc">Toca cada llamita para apagar las velas. Cuando se apaguen todas… pide tu deseo.</p>
+
+      <div class="cake-stage">
+        <div class="cake-glow" aria-hidden="true"></div>
+
+        <div class="cake">
+          <div class="candles" id="candles"></div>
+          <div class="layers" aria-hidden="true">
+            <div class="layer layer-top"></div>
+            <div class="layer layer-mid"></div>
+            <div class="layer layer-bottom"></div>
+            <div class="cake-plate"></div>
+          </div>
+        </div>
+
+        <div class="cake-mascots" aria-hidden="true">
+          <div class="mascot mascot--left mascot--cake" data-mascot="mushu">
+            <img class="mascot-img" alt="" hidden>
+            <svg class="mascot-art" viewBox="0 0 200 200"><use href="#art-mushu"></use></svg>
+          </div>
+          <div class="mascot mascot--right mascot--cake" data-mascot="cinnamon">
+            <img class="mascot-img" alt="" hidden>
+            <svg class="mascot-art" viewBox="0 0 200 200"><use href="#art-cinnamon"></use></svg>
+          </div>
+        </div>
+      </div>
+
+      <p class="cake-status" id="cakeStatus">Velas encendidas: <strong>5</strong></p>
+      <div class="cake-actions">
+        <button class="btn ghost sm" id="blowBtn" type="button">Soplar 💨</button>
+        <button class="btn ghost sm" id="relightBtn" type="button">Encender otra vez ⟳</button>
+      </div>
+    </section>
+
+    <!-- TARJETAS -->
+    <section class="section wishes reveal" id="wishes">
+      <p class="section-label">Detalles para ti</p>
+      <h2 class="section-title">Tres pequeñas verdades</h2>
+      <p class="section-desc">Cada tarjeta guarda algo distinto. Tócalas para girarlas.</p>
+      <div class="cards" id="cards"></div>
+    </section>
+
+    <!-- CARTA -->
+    <section class="section letter reveal" id="letter">
+      <div class="letter-card">
+        <div class="letter-mascots" aria-hidden="true">
+          <div class="mascot mascot--letter" data-mascot="mushu">
+            <img class="mascot-img" alt="" hidden>
+            <svg class="mascot-art" viewBox="0 0 200 200"><use href="#art-mushu"></use></svg>
+          </div>
+          <div class="mascot mascot--letter" data-mascot="cinnamon">
+            <img class="mascot-img" alt="" hidden>
+            <svg class="mascot-art" viewBox="0 0 200 200"><use href="#art-cinnamon"></use></svg>
+          </div>
+        </div>
+
+        <p class="letter-eyebrow">Una nota para <span data-name>Ivy</span></p>
+        <h2 class="letter-title">Hoy el mundo celebra que naciste</h2>
+        <div class="letter-body">
+          <p>Querida <span data-name>Ivy</span>: hoy no es un día cualquiera. Es el día en que el mundo se volvió un poco más bonito, porque llegaste tú a mi vida, porque te conocí sin saber que ibas a convertirte en lo más importante de mi vida.</p>
+          <p>Gracias por tu risa, por tu forma de mirar las cosas, por esos detalles que quizá crees pequeños y que para los demás son enormes. Que este nuevo año te traiga todo lo que deseas… y también esas cosas buenas que ni sabías que necesitabas. Yo sé como eres, pero creeme que cada cosa que haces, vale la pena, eso demuestra la calidad de persona que eres, por favor, no te rindas nunca.</p>
+          <p>Sopla las velas, pide un deseo grande y deja que hoy todos celebremos que existes, y que estarás conmigo por mucho tiempo pelaná, espero pronto ya te vuelvas transyucateque.</p>
+        </div>
+        <div class="letter-sign">Con cariño,<br><span>Eri Davalos</span></div>
+        <button class="btn primary" id="letterBtn" type="button">Otra vez 🎉</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Aviso flotante -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="project.js?v=2"></script>
+</body>
+</html>
