@@ -66,7 +66,15 @@ Gallery { id, url, user, galleryType, purchasedPackage, packageCategory, isPubli
         // galleryType: "image" | "video" | "pdf"
 ```
 
-> Compatibilidad: el frontend resuelve `services.icon` ("icon/video.svg") a un SVG mediante `ServiceIcons` en `gallery/assets/models.js`. Las claves CSS de categoría/tier se derivan con `categoryKey()` ("XV Años" → "xv-anos").
+> Compatibilidad: el frontend resuelve `services.icon` a lo que se pinta en la web desde `gallery/assets/models.js` (`resolveServiceIcon`), que acepta los DOS formatos que guarda la columna:
+>
+> | Valor de `services.icon` | Cómo se dibuja |
+> |---|---|
+> | `material:videocam` (lo elige el módulo **Servicios** del panel) | `<span class="material-symbols-outlined">`, con la tipografía **Material Symbols Outlined** que cargan las páginas: el sitio muestra EXACTAMENTE el mismo icono que el admin |
+> | `icon/video.svg` (heredado) | SVG de la tabla `ServiceIcons` |
+> | vacío o desconocido | icono genérico de servicios |
+>
+> Las claves CSS de categoría/tier se derivan con `categoryKey()` ("XV Años" → "xv-anos").
 
 ---
 
@@ -96,6 +104,8 @@ Usados por el panel `Hardstreet_Admin/` (Flutter), contra la MISMA API que la we
 | DELETE | `/api/admin/clients?id=N` | Baja lógica del cliente |
 | GET | `/api/admin/client-packages?userId=N` | Paquetes del cliente + catálogo para asignar |
 | POST | `/api/admin/client-packages` | `{userId, packageId}` crea compra desde catálogo (copia servicios) · `{userId, purchasedPackageId}` asigna compra existente · `{userId, usersPackageId}` quita el paquete |
+| GET | `/api/admin/package-progress?purchasedPackageId=N` | Administración del paquete: servicios (estado + cierre), movimientos, totales, `canFinish` y `blockers` |
+| POST | `/api/admin/package-progress` | `{action}`: `completar-servicio` · `reabrir-servicio` · `actualizar-servicio` · `actualizar-servicio-url` · **`actualizar-servicio-share`** (`{serviceId, folder, link}` = carpeta y liga compartidas de ESE servicio del paquete) · `movimiento` (inversión/gasto/abono externo) · `quitar-movimiento` · `finalizar` (valida servicios entregados y pago completo) · `reabrir-paquete` |
 
 > El árbol de permisos del modal (grupos **Operación / Catálogos / Administración**) se define en `Hardstreet-Backend/lib/admin-modules.ts`; los IDs de módulo/permiso se resuelven contra la BD.
 
@@ -113,9 +123,15 @@ Usados por el panel `Hardstreet_Admin/` (Flutter), contra la MISMA API que la we
 | GET | `/api/services` | — | Catálogo de servicios |
 | GET | `/api/extern-services` | — | Servicios externos (carousel, `is_extern=1`) |
 | GET | `/api/my/packages` | header Bearer | **PurchasedPackages del usuario** (dashboard) |
+| GET | `/api/my/drive` | header Bearer | Carpetas del Drive COMPARTIDAS con el usuario (`paths: [{packageId, packageName, path}]`; un paquete puede compartir varias) |
+| GET | `/api/my/service-items?serviceId=N` | header Bearer | La LISTA de elementos/fotos que el cliente marcó para ese servicio del paquete |
+| PUT | `/api/my/service-items` | header Bearer | `{serviceId, paths:[...]}` REEMPLAZA esa selección (solo rutas dentro de lo compartido) |
 | GET | `/api/my/gallery` | header Bearer | Galería del usuario |
 | GET | `/api/public/gallery` | — | Galería pública (landing) |
 | GET | `/api/modules` | opcional | Módulos del sidebar con permisos por rol |
+| GET | `/api/site` | — | **Diseño del sitio en vivo**: `{design, landing}` (tabla `site_config`) |
+| GET | `/api/admin/site` | header Bearer | Lee `design` + `landing` (permiso `Paquetes:read`) |
+| PUT | `/api/admin/site` | header Bearer | Guarda `design` (permiso `Paquetes:update`) y/o `landing` (`Sitio web:update`) |
 
 ### Correr en local
 ```bash
@@ -138,6 +154,60 @@ En `gallery/assets/config.js`:
 window.HARDSTREET_API_URL = 'https://tu-backend.vercel.app';
 ```
 Vacio = mismo origen.
+
+### Diseño del sitio (tarjetas y portada)
+
+La tabla `site_config` (fila única `id = 1`) guarda dos documentos JSON que el
+panel DISEÑA y la web APLICA en vivo al cargar (`GET /api/site` →
+`gallery/assets/site.js` → CSS). No hace falta volver a publicar el sitio.
+
+**`design`** (lo edita *Paquetes → Diseñar cards*):
+
+```jsonc
+{
+  "brand": { "gold": "#C9A96E", "goldLight": "#F0D48A" },
+  "card": {
+    "columns": 3, "gap": 40, "radius": 18, "borderWidth": 1, "padding": 32,
+    "lineTop": true, "hoverLift": true, "shadow": true,
+    "serifNames": true, "uppercaseNames": false,
+    "showCategory": true, "showSubtitle": true, "showServiceCount": true,
+    "showServices": true, "servicesLimit": 6, "showPrice": true, "showCta": true,
+    "priceLabel": "Desde", "ctaLabel": "Cotizar"
+  },
+  "tiers": {
+    "premium": { "accent": "#C9A96E", "accentSoft": "#F0D48A", "dark": "#0B0E17", "badgeFilled": true, "borderAlpha": 0.55 },
+    "gold":    { "accent": "#D9A441", "accentSoft": "#F2C66B", "dark": "#120E05", "badgeFilled": true, "borderAlpha": 0.3 },
+    "basic":   { "accent": "#8FB0D4", "accentSoft": "#B9D0E6", "dark": "#0B111A", "badgeFilled": false, "borderAlpha": 0.22 }
+  }
+}
+```
+
+Los MISMOS defaults viven en `gallery/assets/site.js` (`SITE_DESIGN_DEFAULT`) y
+en el panel (`Hardstreet_Admin/lib/site_design.dart`);
+`Hardstreet_Admin/test/site_design_test.dart` compara los dos y
+`Hardstreet/tests/site-design.test.mjs` comprueba el CSS resultante.
+
+**`landing`** (portada; lo edita el módulo *Sitio web*, solo Windows por ahora):
+`{ texts, images, sections }`. Cada clave es un gancho del HTML de la portada
+(`Hardstreet/index.html`), que ya los trae puestos (27 textos, 5 imágenes y 8
+secciones):
+
+- `data-hs="clave"` → texto. Con `data-hs-lines` el valor admite DOS líneas
+  separadas por `|` y la segunda va con énfasis (`<span>` del titular o `<em>`
+  del divisor, según `data-hs-em`): así se edita el copy sin perder el diseño.
+- `data-hs-img="clave"` → imagen: cambia el `src` si el gancho está en un
+  `<img>` (logos, foto de "Sobre nosotros") o el `background-image` si está en
+  un `div` (fondo del hero y del divisor).
+- `data-hs-section="clave"` → sección: `visible` la oculta/muestra y `order` la
+  reordena. El orden se aplica MOVIENDO las secciones dentro del documento (la
+  portada no es un contenedor flexible), agrupadas donde estaban.
+
+Sólo se guardan los campos CAMBIADOS: lo demás sigue leyéndose del HTML, así el
+copy del sitio puede seguir evolucionando sin que el panel lo pise. El panel
+(`Hardstreet_Admin/lib/web_content.dart`) es el espejo de esos ganchos y
+`test/site_page_test.dart` falla si alguno se agrega en un solo lado.
+
+Migración: `Hardstreet-DB/2026-10-16_sitio_web.sql`.
 
 ### Modo estricto (sin fallback)
 El frontend ya **no tiene datos demo ni fallback local**: todo viene del backend.
@@ -178,8 +248,12 @@ El frontend ya **no tiene datos demo ni fallback local**: todo viene del backend
 | Tabla | Modelo | Notas |
 |---|---|---|
 | `packages` | `Package` | + `services` vía `packages_services` |
-| `purchased_packages` | `PurchasedPackage` | + `package` heredado + `services` vía `purchased_packages_services` |
-| `purchased_packages_services` | `PurchasedPackageService` | + `service` + `status` resueltos |
+| `purchased_packages` | `PurchasedPackage` | + `package` heredado + `services` vía `purchased_packages_services`; `drive_path` sigue siendo la PRIMERA carpeta compartida (compatibilidad) |
+| `purchased_packages_drive` | (carpetas compartidas) | VARIAS carpetas del Drive por paquete; el Drive del cliente solo muestra estas |
+| `purchased_packages_services` | `PurchasedPackageService` | + `service` + `status` resueltos; `finished_at` = cierre del servicio |
+| `purchased_packages_services_shares` | (compartir por servicio) | `folder` y/o `link` que se comparten con el cliente para ESE servicio del paquete |
+| `purchased_packages_services_items` | (selección del cliente) | una fila por ruta del Drive que el CLIENTE marcó para ese servicio; nada se mueve ni se copia |
+| `purchased_packages_movements` | (ledger) | inversión / gasto / abono externo (`kind`); los ABONOS viven en `purchased_packages_payments` |
 | `services` | `Service` | icono resuelto a SVG en el front |
 | `tiers` | `Tier` | |
 | `packages_categories` | `PackageCategory` | |

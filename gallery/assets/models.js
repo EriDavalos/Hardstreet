@@ -28,10 +28,27 @@ const ServiceIcons = {
   general: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
 };
 
-/** Resuelve "icon/photos.svg" (o "photos") al SVG correspondiente. */
+/**
+ * Resuelve el icono de un servicio al HTML que se pinta en la web.
+ *
+ * Acepta los dos formatos que guarda la columna `services.icon`:
+ *   * `material:videocam` → el MISMO icono que elige el panel (Flutter) en el
+ *     módulo Servicios. Se dibuja con la tipografía Material Symbols, así el
+ *     sitio y la app muestran exactamente el mismo dibujo sin mantener aquí
+ *     una lista de SVG que se quedaría corta.
+ *   * `icon/photos.svg`  → formato heredado: se resuelve con la tabla de SVG.
+ */
 function resolveServiceIcon(icon) {
   if (!icon) return ServiceIcons.general;
-  const key = String(icon).split('/').pop().replace(/\.svg$/i, '');
+  const raw = String(icon).trim();
+  if (/^material:/i.test(raw)) {
+    // Solo el nombre del icono (nada de HTML): se limpia por si llegara basura.
+    const name = raw.slice('material:'.length).trim().toLowerCase()
+      .replace(/[^a-z0-9_]/g, '');
+    if (!name) return ServiceIcons.general;
+    return `<span class="material-symbols-outlined" aria-hidden="true">${name}</span>`;
+  }
+  const key = raw.split('/').pop().replace(/\.svg$/i, '');
   return ServiceIcons[key] || ServiceIcons.general;
 }
 

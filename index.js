@@ -526,9 +526,15 @@ async function initLanding() {
 
   // Catalogo + filtros (packages_grid). Si falla, error global con Reintentar.
   try {
+    // El DISEÑO del sitio (lo que se edita en el panel) se aplica ANTES de
+    // pintar las tarjetas: así aparecen ya con el diseño elegido, sin un
+    // parpadeo con el look viejo.
+    if (window.HSSite) await window.HSSite.load();
     await Store.loadCatalog();
     renderCategoryFilters();
     renderAllPackages();
+    // Recorta los servicios al tope del diseño ("+N más…").
+    if (window.HSSite) window.HSSite.trimServices(document);
   } catch (e) {
     console.error('[HardStreet] El backend no respondio:', e.message);
     showError(e.message);

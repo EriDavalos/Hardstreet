@@ -19,6 +19,20 @@ function imageForPackage(pkg, idx = 0) {
   return ExternImagesPool[pkg.id % ExternImagesPool.length] || ExternImagesPool[idx % ExternImagesPool.length];
 }
 
+// ========== TEXTOS DEL DISEÑO (los edita el panel) ==========
+// El diseñador de tarjetas del panel puede cambiar estos rótulos; si no hay
+// diseño cargado, se usan los de siempre.
+function designCard() {
+  const d = window.HS_SITE_DESIGN;
+  return (d && d.card) || {};
+}
+function designPriceLabel() {
+  return designCard().priceLabel || 'Desde';
+}
+function designCtaLabel() {
+  return designCard().ctaLabel || 'Cotizar';
+}
+
 // ========== CARD DE PAQUETE (landing) ==========
 function renderPackageCard(pkg) {
   const serviciosHTML = pkg.services.map(s =>
@@ -47,12 +61,12 @@ function renderPackageCard(pkg) {
         <ul class="pkg-services">${serviciosHTML}</ul>
         <div class="pkg-footer">
           <div class="pkg-price">
-            <span class="pkg-price-label">Desde</span>
+            <span class="pkg-price-label">${designPriceLabel()}</span>
             <span class="pkg-price-value">${pkg.priceFormatted}</span>
             <span class="pkg-price-note">${pkg.currency}</span>
           </div>
           <a href="#contact" class="pkg-cta">
-            <span>Cotizar</span>
+            <span>${designCtaLabel()}</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
         </div>
