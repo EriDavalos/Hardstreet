@@ -46,6 +46,38 @@ const SITE_DESIGN_DEFAULT = {
   },
 };
 
+// ==================================================================
+// SECCIONES DE LA PORTADA (contenido por sección)
+// ==================================================================
+// Cada sección tiene, además de sus textos e imágenes (ganchos `data-hs` y
+// `data-hs-img`), sus PROPIAS opciones: los números de "Sobre nosotros", las
+// fotos de cada categoría de la galería, los comentarios de los clientes, el
+// WhatsApp de contacto… El panel las edita por sección y aquí se aplican.
+//
+// Estos defaults son el contenido de fábrica de la página. El panel los espeja
+// (`Hardstreet_Admin/lib/web_sections.dart`) y una prueba compara los dos.
+
+const SITE_SECTIONS_DEFAULT = {
+  hero: {},
+  about: {
+    stats: [
+      { value: 30, label: 'Proyectos' },
+      { value: 4, label: 'Años Exp.' },
+      { value: 50, label: 'Clientes Felices' },
+    ],
+  },
+  // 'public' = las fotos que ya están marcadas como públicas en el Drive;
+  // 'custom' = las elegidas por categoría desde el panel.
+  gallery: { mode: 'public', categories: [] },
+  parallax: {},
+  services: { servicesPerSlide: 4 },
+  packages: { groupByCategory: true },
+  testimonials: { items: [] },
+  contact: { whatsapp: '' },
+  footer: {},
+  brand: {},
+};
+
 // ---------- utilidades ----------
 
 const HS_TIERS = ['premium', 'gold', 'basic'];
@@ -77,6 +109,107 @@ function hsAlpha(hex, alpha) {
 }
 
 const hsEsc = (v) => String(v == null ? '' : v).replace(/[<>]/g, '');
+
+/** Claves CSS de una categoría: "XV Años" → "xv-anos" (igual que la web). */
+function hsCategoryKey(name) {
+  return String(name == null ? '' : name)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/**
+ * Opciones de UNA sección, mezcladas con las de fábrica.
+ * Lo que no venga en el documento se queda como siempre (una sección nueva o
+ * a medio llenar nunca deja la página rara).
+ */
+function hsSectionProps(name, landing) {
+  const stored = (landing && landing.sections && landing.sections[name]) || {};
+  const patch = stored.props || {};
+  const base = SITE_SECTIONS_DEFAULT[name] || {};
+  return hsMerge(base, patch);
+}
+
+/** Números de "Sobre nosotros" (valor + etiqueta), ya limpios. */
+function hsStats(props) {
+  const raw = (props && props.stats) || [];
+  const out = [];
+  for (const s of raw) {
+    if (!s || typeof s !== 'object') continue;
+    const value = Number(s.value);
+    const label = String(s.label == null ? '' : s.label).trim();
+    if (!Number.isFinite(value) || !label) continue;
+    out.push({ value: Math.max(0, Math.round(value)), label });
+  }
+  return out;
+}
+
+/**
+ * Categorías de la galería con sus fotos ELEGIDAS en el panel.
+ * Devuelve [] cuando no hay nada configurado: en ese caso la página usa las
+ * fotos públicas de siempre.
+ */
+function hsGalleryCategories(props) {
+  const raw = (props && props.categories) || [];
+  const out = [];
+  for (const c of raw) {
+    if (!c || typeof c !== 'object') continue;
+    const name = String(c.name == null ? '' : c.name).trim();
+    const key = String(c.key == null ? '' : c.key).trim() || hsCategoryKey(name);
+    if (!key) continue;
+    const items = (Array.isArray(c.items) ? c.items : [])
+      .map((v) => String(v == null ? '' : v).trim())
+      .filter(Boolean);
+    if (!items.length) continue;
+    out.push({ key, name: name || key, items });
+  }
+  return out;
+}
+
+/** Comentarios de clientes configurados en el panel (vacío = los de fábrica). */
+function hsTestimonials(props) {
+  const raw = (props && props.items) || [];
+  const out = [];
+  for (const t of raw) {
+    if (!t || typeof t !== 'object') continue;
+    const text = String(t.text == null ? '' : t.text).trim();
+    const name = String(t.name == null ? '' : t.name).trim();
+    if (!text && !name) continue;
+    out.push({ name, role: String(t.role == null ? '' : t.role).trim(), text });
+  }
+  return out;
+}
+
+/**
+ * EL PLAN de la portada: todo lo que hay que pintar, ya mezclado con los
+ * defaults. Es una función PURA (mismo documento → mismo plan): la usa
+ * `applySiteContent` y las pruebas la revisan sin navegador.
+ */
+function siteContentPlan(rawLanding) {
+  const l = rawLanding && typeof rawLanding === 'object' ? rawLanding : {};
+  const sections = {};
+  for (const name of Object.keys(SITE_SECTIONS_DEFAULT)) {
+    sections[name] = hsSectionProps(name, l);
+  }
+  const galleryCategories = hsGalleryCategories(sections.gallery);
+  const testimonials = hsTestimonials(sections.testimonials);
+  const whatsapp = String(sections.contact.whatsapp == null ? '' : sections.contact.whatsapp)
+    .replace(/[^0-9]/g, '');
+  return {
+    texts: l.texts || {},
+    images: l.images || {},
+    layout: l.sections || {},
+    sections,
+    stats: hsStats(sections.about),
+    gallery: { categories: galleryCategories, custom: galleryCategories.length > 0 },
+    testimonials,
+    packages: { groupByCategory: sections.packages.groupByCategory !== false },
+    services: { perSlide: Number(sections.services.servicesPerSlide) || 4 },
+    contact: { whatsapp, whatsappUrl: whatsapp ? `https://wa.me/${whatsapp}` : '' },
+  };
+}
 
 // ---------- el diseño → CSS ----------
 
@@ -186,17 +319,31 @@ function applySiteDesign(rawDesign) {
  */
 function applySiteContent(rawLanding) {
   if (typeof document === 'undefined') return;
-  const l = rawLanding || {};
+  // El PLAN de la portada: textos, imágenes, orden de secciones y las
+  // opciones propias de cada sección (números, galería, testimonios…).
+  const plan = siteContentPlan(rawLanding);
+  // Se publica para las páginas que pintan datos propios (index.js y los
+  // tableros del cliente): leen el MISMO plan.
+  window.HS_SITE_CONTENT = plan;
+
   // Textos (uno por gancho `data-hs`).
-  const texts = l.texts || {};
-  for (const [key, value] of Object.entries(texts)) {
+  for (const [key, value] of Object.entries(plan.texts)) {
     const el = document.querySelector(`[data-hs="${key}"]`);
     if (el && value != null) setHsText(el, String(value));
   }
+  // Correo y teléfono: si el valor es un correo o un teléfono, su enlace se
+  // actualiza solo (mailto:/tel:) para que se pueda tocar desde el celular.
+  document.querySelectorAll('[data-hs-mail]').forEach((el) => {
+    const href = contactHref(el.textContent, 'mail');
+    if (href) el.setAttribute('href', href);
+  });
+  document.querySelectorAll('[data-hs-tel]').forEach((el) => {
+    const href = contactHref(el.textContent, 'tel');
+    if (href) el.setAttribute('href', href);
+  });
   // Imágenes: `src` si el gancho está en un <img>, fondo si está en un div
   // (el hero y el divisor parallax son fondos).
-  const images = l.images || {};
-  for (const [key, value] of Object.entries(images)) {
+  for (const [key, value] of Object.entries(plan.images)) {
     const el = document.querySelector(`[data-hs-img="${key}"]`);
     if (!el || !value) continue;
     const url = String(value).trim();
@@ -205,7 +352,170 @@ function applySiteContent(rawLanding) {
     if (el.tagName === 'IMG') el.setAttribute('src', url);
     else el.style.backgroundImage = `url("${url}")`;
   }
-  applySectionOrder(l.sections || {});
+  applySectionOrder(plan.layout);
+  applyStats(plan);
+  applyGalleryContent(plan);
+  applyTestimonials(plan);
+  applyWhatsapp(plan);
+  return plan;
+}
+
+/** Enlace de un dato de contacto (`mailto:` / `tel:`). Puro. */
+function contactHref(value, kind) {
+  const v = String(value == null ? '' : value).trim();
+  if (!v) return '';
+  if (kind === 'tel') {
+    const digits = v.replace(/[^0-9]/g, '');
+    return digits ? `tel:+${digits.replace(/^00/, '')}` : '';
+  }
+  return /@/.test(v) ? `mailto:${v.replace(/\s+/g, '')}` : '';
+}
+
+/**
+ * Números de "Sobre nosotros" (Proyectos / Años Exp. / Clientes Felices…).
+ * Si el panel agrega más de los que trae el HTML, se clonan los bloques; si
+ * deja menos, los que sobran se ocultan (no se borran: pueden volver).
+ */
+function applyStats(plan) {
+  const wrap = document.querySelector('.about-stats');
+  if (!wrap || !plan.stats.length) return;
+  const blocks = [...wrap.querySelectorAll('[data-hs-stat]')];
+  if (!blocks.length) return;
+  while (blocks.length < plan.stats.length) {
+    const copy = blocks[blocks.length - 1].cloneNode(true);
+    wrap.appendChild(copy);
+    blocks.push(copy);
+  }
+  plan.stats.forEach((s, i) => {
+    const block = blocks[i];
+    block.style.display = '';
+    const number = block.querySelector('.stat-number');
+    if (number) {
+      number.setAttribute('data-count', String(s.value));
+      number.textContent = `${s.value}+`;
+    }
+    const label = block.querySelector('.stat-label');
+    if (label) label.textContent = s.label;
+  });
+  for (let i = plan.stats.length; i < blocks.length; i++) {
+    blocks[i].style.display = 'none';
+  }
+  if (typeof window.HSObserveStats === 'function') window.HSObserveStats();
+}
+
+/** Botones de categoría de la galería ("Todos" + las categorías con fotos). */
+function galleryFiltersHtml(plan) {
+  return [
+    '<button class="filter-btn active" data-filter="all">Todos</button>',
+    ...plan.gallery.categories.map(
+      (c) => `<button class="filter-btn" data-filter="${hsEsc(c.key)}">${hsEsc(c.name)}</button>`
+    ),
+  ].join('');
+}
+
+/** Rejilla de la galería con las fotos elegidas por categoría. Puro. */
+function galleryHtml(plan) {
+  const out = [];
+  let i = 0;
+  for (const c of plan.gallery.categories) {
+    for (const item of c.items) {
+      const url = String(item).replace(/["<>]/g, '').trim();
+      if (!url) continue;
+      out.push(
+        `<div class="gallery-item ${i % 3 === 0 ? 'tall' : ''} reveal" data-category="${hsEsc(c.key)}">` +
+          `<img src="${url}" alt="${hsEsc(c.name)}" loading="lazy" />` +
+          `<div class="gallery-item-overlay"><h3>${hsEsc(c.name)}</h3><p>Fotografía</p></div>` +
+          '<div class="gallery-item-line"></div>' +
+        '</div>'
+      );
+      i++;
+    }
+  }
+  return out.join('');
+}
+
+/**
+ * Galería con las fotos elegidas en el panel. Sin fotos configuradas NO se
+ * toca nada: la página sigue mostrando la galería pública de siempre.
+ */
+function applyGalleryContent(plan) {
+  if (!plan.gallery.custom) return false;
+  const grid = document.querySelector('.gallery-grid');
+  if (!grid) return false;
+  const filters = document.querySelector('.gallery-filters');
+  if (filters) filters.innerHTML = galleryFiltersHtml(plan);
+  grid.innerHTML = galleryHtml(plan);
+  if (window.HSRevealObserver) {
+    grid.querySelectorAll('.reveal').forEach((el) => window.HSRevealObserver.observe(el));
+  }
+  if (typeof window.HSBindGalleryFilters === 'function') window.HSBindGalleryFilters();
+  return true;
+}
+
+/** Carrusel de testimonios con los comentarios escritos en el panel. */
+function testimonialsHtml(plan) {
+  const items = plan.testimonials;
+  const slides = items.map((t, i) =>
+    `<div class="testimonial-item ${i === 0 ? 'active' : ''}">` +
+      `<p class="testimonial-quote">${hsEsc(t.text)}</p>` +
+      `<p class="testimonial-author">${hsEsc(t.name)}</p>` +
+      `<p class="testimonial-role">${hsEsc(t.role)}</p>` +
+    '</div>'
+  ).join('');
+  const dots = items.map((_, i) =>
+    `<span class="dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>`
+  ).join('');
+  return `${slides}<div class="testimonial-dots" id="testimonialDots">${dots}</div>`;
+}
+
+/**
+ * Comentarios de clientes: sin nada escrito, se quedan los que trae el HTML
+ * (así la sección nunca aparece vacía por no haberla llenado todavía).
+ */
+function applyTestimonials(plan) {
+  if (!plan.testimonials.length) return false;
+  const slider = document.querySelector('.testimonial-slider');
+  if (!slider) return false;
+  slider.innerHTML = testimonialsHtml(plan);
+  if (typeof window.HSInitTestimonials === 'function') window.HSInitTestimonials();
+  return true;
+}
+
+/** WhatsApp del contacto (si se configuró en el panel). */
+function applyWhatsapp(plan) {
+  const block = document.querySelector('[data-hs-whatsapp]');
+  if (!block) return false;
+  if (!plan.contact.whatsappUrl) {
+    block.style.display = 'none';
+    return false;
+  }
+  block.style.display = '';
+  block.querySelectorAll('a').forEach((a) => a.setAttribute('href', plan.contact.whatsappUrl));
+  return true;
+}
+
+/**
+ * Paquetes agrupados por categoría (como los pide el módulo del sitio).
+ * Puro: recibe los paquetes del catálogo y devuelve los grupos en orden.
+ * Sin agrupación, un solo grupo con todo ('' = sin título).
+ */
+function groupPackages(packages, plan) {
+  const list = (packages || []).filter((p) => !p.isExtern);
+  if (!plan || !plan.packages || plan.packages.groupByCategory === false) {
+    return [{ key: '', name: '', packages: list }];
+  }
+  const out = [];
+  for (const p of list) {
+    const key = String(p.categoryKey || (p.packageCategory && p.packageCategory.name) || '');
+    const name = String((p.packageCategory && p.packageCategory.name) || key);
+    let group = out.find((g) => g.key === key);
+    if (!group) {
+      group = { key, name, packages: [] };
+      out.push(group);
+    }
+    group.packages.push(p);
+  }
+  return out;
 }
 
 /**
@@ -282,13 +592,13 @@ function loadSiteConfig() {
       // Sin backend: defaults.
     }
     applySiteDesign(design);
-    applySiteContent(landing);
+    const plan = applySiteContent(landing);
     // En las páginas que ya pintaron tarjetas antes de llegar aquí (los tableros
     // no esperan a la API), los textos del diseño y el tope de servicios se
     // corrigen en el momento.
     refreshDesignTexts(document);
     trimServiceLists(document);
-    return { design: hsMerge(SITE_DESIGN_DEFAULT, design || {}), landing };
+    return { design: hsMerge(SITE_DESIGN_DEFAULT, design || {}), landing, plan };
   })();
   return hsSiteLoaded;
 }
@@ -367,12 +677,25 @@ if (typeof document !== 'undefined') {
 }
 
 window.HSSite = {
+  // Diseño de las tarjetas
   defaults: SITE_DESIGN_DEFAULT,
-  load: loadSiteConfig,
   apply: applySiteDesign,
-  applyContent: applySiteContent,
   css: siteDesignCss,
   trimServices: trimServiceLists,
   refreshTexts: refreshDesignTexts,
   merge: hsMerge,
+  // Contenido de la portada (por sección)
+  sectionsDefaults: SITE_SECTIONS_DEFAULT,
+  plan: siteContentPlan,
+  load: loadSiteConfig,
+  applyContent: applySiteContent,
+  applyGallery: applyGalleryContent,
+  applyTestimonials,
+  applyWhatsapp,
+  galleryHtml,
+  galleryFiltersHtml,
+  testimonialsHtml,
+  groupPackages,
+  contactHref,
+  categoryKey: hsCategoryKey,
 };

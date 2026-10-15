@@ -481,6 +481,32 @@ section[id] { scroll-margin-top: 84px; }
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
   gap: 2.5rem; margin-top: 2.5rem;
 }
+/* Paquetes AGRUPADOS POR CATEGORÍA (lo elige el módulo Sitio web): el
+   contenedor deja de ser una rejilla y cada categoría trae la suya. */
+.packages-grid.grouped { display: block; }
+.pkg-group { margin-top: 2.5rem; }
+.pkg-group-head {
+  display: flex; align-items: center; gap: 1rem;
+  margin-bottom: 1.4rem;
+}
+.pkg-group-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.7rem; font-weight: 600; color: #fff;
+  white-space: nowrap;
+}
+.pkg-group-line {
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, rgba(201, 169, 110, 0.55), transparent);
+}
+.pkg-group-count {
+  font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--gold); white-space: nowrap;
+}
+.pkg-group .packages-grid { margin-top: 0; }
+@media (max-width: 620px) {
+  .pkg-group-title { font-size: 1.3rem; }
+  .pkg-group-count { display: none; }
+}
 .package-card {
   position: relative;
   background: var(--bg);

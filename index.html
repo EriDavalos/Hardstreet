@@ -8,7 +8,7 @@
   <link rel="icon" href="./images/LOG.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="index.css?v=4" />
+  <link rel="stylesheet" href="index.css?v=5" />
 </head>
 <body>
 
@@ -75,17 +75,19 @@
         <p data-hs="about_text_2">
           Nuestro enfoque combina una estética cuidada con sensibilidad única para la luz y la composición, creando imágenes que trascienden lo ordinario y conectan emocionalmente con quien las observa.
         </p>
+        <!-- Los números se editan en el panel (Sitio web → Sobre nosotros).
+             `data-hs-stat` marca cada bloque: si se agregan más, se clonan. -->
         <div class="about-stats">
-          <div>
-            <div class="stat-number" data-count="30">0</div>
+          <div data-hs-stat="1">
+            <div class="stat-number" data-count="30">30+</div>
             <div class="stat-label">Proyectos</div>
           </div>
-          <div>
-            <div class="stat-number" data-count="4">0</div>
+          <div data-hs-stat="2">
+            <div class="stat-number" data-count="4">4+</div>
             <div class="stat-label">Años Exp.</div>
           </div>
-          <div>
-            <div class="stat-number" data-count="50">0</div>
+          <div data-hs-stat="3">
+            <div class="stat-number" data-count="50">50+</div>
             <div class="stat-label">Clientes Felices</div>
           </div>
         </div>
@@ -164,6 +166,7 @@
     <div class="reveal" style="text-align: center;">
       <p class="section-label" data-hs="testimonials_label">Testimonios</p>
       <h2 class="section-title" data-hs="testimonials_title">Lo que Dicen Mis Clientes</h2>
+      <p class="section-desc" data-hs="testimonials_subtitle" style="text-align:center;">Lo que dicen mis clientes</p>
       <div class="section-line" style="margin: 0 auto 2rem;"></div>
     </div>
     <div class="testimonial-slider reveal">
@@ -198,17 +201,24 @@
         <h2 class="section-title" data-hs="contact_title">Trabajemos Juntos</h2>
         <div class="section-line"></div>
         <p data-hs="contact_text">Tienes un evento en mente? Contáctanos y hagamos que tus momentos cobren vida con Hard Street.</p>
+        <!-- Los datos se editan en el panel; `data-hs-mail` / `data-hs-tel`
+             actualizan el enlace (mailto:/tel:) para que se puedan tocar. -->
         <div class="contact-detail">
           <div class="contact-detail-icon">✉</div>
-          <span data-hs="contact_email">hardstreet7@gmail.com</span>
+          <a href="mailto:hardstreet7@gmail.com" data-hs="contact_email" data-hs-mail>hardstreet7@gmail.com</a>
         </div>
         <div class="contact-detail">
           <div class="contact-detail-icon">☎</div>
-          <span data-hs="contact_phone">+52 990 101 7986</span>
+          <a href="tel:+529901017986" data-hs="contact_phone" data-hs-tel>+52 990 101 7986</a>
         </div>
         <div class="contact-detail">
           <div class="contact-detail-icon">◎</div>
           <span data-hs="contact_address">Mérida, Yuc. Temozón</span>
+        </div>
+        <!-- WhatsApp: se muestra sólo si el panel configura un número. -->
+        <div class="contact-detail" data-hs-whatsapp style="display: none;">
+          <div class="contact-detail-icon">✆</div>
+          <a href="#contact">Escribir por WhatsApp</a>
         </div>
       </div>
       <form class="contact-form reveal-right" onsubmit="handleSubmit(event)">
@@ -315,10 +325,10 @@
   </div>
 
   <script src="gallery/assets/config.js?v=5"></script>
-  <script src="gallery/assets/site.js?v=4"></script>
+  <script src="gallery/assets/site.js?v=5"></script>
   <script src="gallery/assets/models.js?v=8"></script>
   <script src="gallery/assets/api.js?v=6"></script>
   <script src="gallery/assets/renderers.js?v=6"></script>
-  <script src="index.js?v=9"></script>
+  <script src="index.js?v=10"></script>
 </body>
 </html>

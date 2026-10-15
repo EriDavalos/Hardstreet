@@ -113,6 +113,8 @@ function observeReveals() {
   document.querySelectorAll('.reveal:not(.active), .reveal-left:not(.active), .reveal-right:not(.active)').forEach(el => revealObserver.observe(el));
 }
 observeReveals();
+// site.js los necesita cuando repinta la galería con las fotos del panel.
+window.HSRevealObserver = revealObserver;
 
 // ========== PARALLAX ==========
 const parallaxBg = document.querySelector('[data-parallax]');
@@ -127,6 +129,9 @@ window.addEventListener('scroll', () => {
 });
 
 // ========== COUNTER ANIMATION ==========
+// Los números (Proyectos / Años Exp. / Clientes Felices) los puede cambiar el
+// panel: si eso pasa DESPUÉS de registrarlos, se vuelven a registrar (los
+// bloques nuevos -clonados- no estarían observados).
 const counterObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
@@ -144,6 +149,11 @@ const counterObserver = new IntersectionObserver((entries) => {
     }
   });
 }, { threshold: 0.5 });
+
+function observeStats() {
+  document.querySelectorAll('.stat-number').forEach(el => counterObserver.observe(el));
+}
+window.HSObserveStats = observeStats;
 
 // ========== GALERIA DESTACADA (desde la API: fotos publicas) ==========
 // Cada foto trae su categoria (packages_categories). Los filtros se generan
@@ -207,6 +217,9 @@ function bindGalleryFilters() {
   });
 }
 
+// site.js lo usa cuando pinta la galería con las fotos elegidas en el panel.
+window.HSBindGalleryFilters = bindGalleryFilters;
+
 // Error solo para "Galeria Destacada": el resto de la pagina sigue funcionando
 function showGalleryError(message) {
   const grid = document.querySelector('.gallery-grid');
@@ -239,25 +252,38 @@ async function loadGallery() {
 }
 
 // ========== TESTIMONIALS ==========
+// Los comentarios pueden venir del panel (Sitio web → Testimonios): cuando
+// llegan, site.js reescribe el carrusel y pide que se vuelva a enganchar.
+// Por eso esto es una FUNCIÓN y no código de una sola pasada.
 let currentTestimonial = 0;
-const testimonials = document.querySelectorAll('.testimonial-item');
-const dots = document.querySelectorAll('.dot');
+let testimonials = [];
+let testimonialDots = [];
+let testimonialTimer = null;
+
 function showTestimonial(index) {
   if (!testimonials.length) return;
   testimonials.forEach(t => t.classList.remove('active'));
-  dots.forEach(d => d.classList.remove('active'));
+  testimonialDots.forEach(d => d.classList.remove('active'));
   testimonials[index].classList.add('active');
-  if (dots[index]) dots[index].classList.add('active');
+  if (testimonialDots[index]) testimonialDots[index].classList.add('active');
   currentTestimonial = index;
 }
-dots.forEach(dot => {
-  dot.addEventListener('click', () => showTestimonial(parseInt(dot.getAttribute('data-index'))));
-});
-if (testimonials.length) {
-  setInterval(() => {
-    showTestimonial((currentTestimonial + 1) % testimonials.length);
-  }, 5000);
+
+function initTestimonials() {
+  testimonials = [...document.querySelectorAll('.testimonial-item')];
+  testimonialDots = [...document.querySelectorAll('#testimonialDots .dot')];
+  testimonialDots.forEach(dot => {
+    dot.addEventListener('click', () => showTestimonial(parseInt(dot.getAttribute('data-index'))));
+  });
+  if (testimonialTimer) clearInterval(testimonialTimer);
+  if (testimonials.length) {
+    testimonialTimer = setInterval(() => {
+      showTestimonial((currentTestimonial + 1) % testimonials.length);
+    }, 5000);
+  }
 }
+window.HSInitTestimonials = initTestimonials;
+initTestimonials();
 
 // ========== PACKAGES (desde la API) ==========
 const packagesContainer = document.getElementById('packagesGrid');
@@ -287,11 +313,31 @@ function bindPkgFilters() {
   });
 }
 
+// Los paquetes del catálogo (is_extern = 0), separados por su CATEGORÍA cuando
+// el módulo del sitio lo pide (es lo que trae la página por defecto).
 function renderAllPackages() {
   if (!packagesContainer) return;
-  const pkgs = Store.packages.filter(p => !p.isExtern);
-  if (!pkgs.length) return; // sin datos no renderiza nada (modo estricto)
-  packagesContainer.innerHTML = pkgs.map(pkg => renderPackageCard(pkg)).join('');
+  const plan = window.HS_SITE_CONTENT || (window.HSSite && window.HSSite.plan(null));
+  const groups = window.HSSite
+    ? window.HSSite.groupPackages(Store.packages, plan)
+    : [{ key: '', name: '', packages: Store.packages.filter(p => !p.isExtern) }];
+  const total = groups.reduce((n, g) => n + g.packages.length, 0);
+  if (!total) return; // sin datos no renderiza nada (modo estricto)
+  const grouped = groups.length > 1 || (groups[0] && groups[0].name);
+  packagesContainer.classList.toggle('grouped', !!grouped);
+  packagesContainer.innerHTML = groups.map(group => {
+    const cards = group.packages.map(pkg => renderPackageCard(pkg)).join('');
+    if (!grouped) return cards;
+    return `
+      <div class="pkg-group" data-group="${group.key}">
+        <div class="pkg-group-head">
+          <h3 class="pkg-group-title">${group.name || 'Paquetes'}</h3>
+          <span class="pkg-group-line"></span>
+          <span class="pkg-group-count">${group.packages.length} paquete${group.packages.length === 1 ? '' : 's'}</span>
+        </div>
+        <div class="packages-grid">${cards}</div>
+      </div>`;
+  }).join('');
   packagesContainer.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
   bindCursorHover();
   filterPackages();
@@ -311,6 +357,14 @@ function filterPackages() {
       card.style.animation = 'pkgFadeOut 0.3s ease forwards';
       setTimeout(() => { card.style.display = 'none'; }, 300);
     }
+  });
+  // Al agrupar por categoría, el grupo se va con sus tarjetas: sin esto
+  // quedaría un título de categoría sin nada debajo.
+  document.querySelectorAll('#packagesGrid .pkg-group').forEach(group => {
+    const any = [...group.querySelectorAll('.package-card')].some(card =>
+      currentCategory === 'all' || card.getAttribute('data-category') === currentCategory
+    );
+    setTimeout(() => { group.style.display = any ? '' : 'none'; }, any ? 0 : 300);
   });
 }
 
@@ -522,7 +576,7 @@ async function initLanding() {
   updateAuthUI();
 
   // Los contadores no dependen de la API: se registran siempre
-  document.querySelectorAll('.stat-number').forEach(el => counterObserver.observe(el));
+  observeStats();
 
   // Catalogo + filtros (packages_grid). Si falla, error global con Reintentar.
   try {
@@ -540,9 +594,16 @@ async function initLanding() {
     showError(e.message);
   }
 
-  // Secciones independientes: el error de una no tira las demas
-  await loadGallery();
+  // Secciones independientes: el error de una no tira las demas.
+  //
+  // La galería ya puede venir pintada por site.js si el panel eligió fotos POR
+  // CATEGORÍA: en ese caso no se pisan las públicas.
+  const customGallery = !!(window.HS_SITE_CONTENT && window.HS_SITE_CONTENT.gallery.custom);
+  if (!customGallery) await loadGallery();
   await loadExtern();
+  // Los comentarios del panel se engancharon al repintar el carrusel: se
+  // vuelve a llamar por si llegaron DESPUÉS de la primera pasada.
+  initTestimonials();
 
   hideLoader();
 }
