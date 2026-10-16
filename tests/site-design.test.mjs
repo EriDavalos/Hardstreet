@@ -157,11 +157,39 @@ test('la foto va en banda arriba con el alto del diseño', () => {
   assert.doesNotMatch(css, /pkg-photo-bg/);
 });
 
-test('la foto de fondo se oscurece con la opacidad y el contenido sube de capa', () => {
+test('la foto de fondo se ve a todo color y la oscurece el degradado de su tier', () => {
   const css = cssWith({ card: { imageMode: 'bg', imageFade: 0.8 } });
   assert.match(css, /\.pkg-photo-bg\{position:absolute;inset:0;background-size:cover;/);
-  assert.match(css, /opacity:0\.8;/);
+  // La foto NO se apaga con `opacity` (así se veía lavada): la oscurece el
+  // degradado que va ENCIMA, que es lo que deja ver la foto y leer el texto,
+  // como en el flyer de referencia.
+  assert.doesNotMatch(
+    css,
+    /\.pkg-photo-bg\{position:absolute;inset:0;background-size:cover;[^}]*opacity:/
+  );
+  assert.match(
+    css,
+    /\.pkg-photo-bg::after\{content:'';position:absolute;inset:0;background:linear-gradient\(180deg,/
+  );
+  // Cada tier oscurece con SU color oscuro, y `imageFade` manda cuánto tapa
+  // (abajo del todo tapa justo ese valor: 0.8).
+  assert.match(
+    css,
+    /\.package-card\.tier-premium \.pkg-photo-bg::after\{background:linear-gradient\(180deg,rgba\(11, 14, 23, 0\.12\) 0%,/
+  );
+  assert.match(css, /rgba\(11, 14, 23, 0\.8\) 100%\)/);
+  assert.match(
+    css,
+    /\.package-card\.tier-basic \.pkg-photo-bg::after\{background:linear-gradient\(180deg,rgba\(11, 17, 26, 0\.12\) 0%,/
+  );
   assert.match(css, /\.package-card>\.pkg-flyer-inner\{position:relative;z-index:1;\}/);
+});
+
+test('con la foto en banda (o sin foto) no se pinta ningún degradado de fondo', () => {
+  const banda = cssWith({ card: { imageMode: 'top' } });
+  assert.doesNotMatch(banda, /pkg-photo-bg|pkg-photo-fade/);
+  const sin = cssWith({ card: { imageMode: 'none' } });
+  assert.doesNotMatch(sin, /pkg-photo-bg|pkg-photo-fade/);
 });
 
 test('un modo de foto desconocido cae a "sin foto"', () => {

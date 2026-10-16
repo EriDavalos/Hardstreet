@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Vista previa · tarjeta de paquete (foto de fondo + degradado)</title>
+<link rel="stylesheet" href="index.css">
+<style id="hs-site-design"></style>
+<style>
+  body { background: #0b0e17; padding: 28px; }
+  .packages-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; }
+  h1 { color: #f5f5f5; font-family: Inter, sans-serif; font-size: 15px; letter-spacing: .12em;
+       text-transform: uppercase; margin: 0 0 18px; }
+</style>
+<script>
+  // El diseño que edita el panel (documento parcial: el resto cae a los
+  // defaults de fábrica, igual que lo guarda la base).
+  window.__design = { card: { imageMode: 'bg', imageFade: 0.7 } };
+  // `site.js` pide el diseño a /api/site al cargar: se le responde con el de
+  // arriba para ver EXACTAMENTE el camino real (diseño → CSS → tarjeta).
+  const __realFetch = window.fetch.bind(window);
+  window.fetch = (url, opts) => {
+    const u = String(url);
+    if (u.includes('/api/site')) {
+      return Promise.resolve(new Response(
+        JSON.stringify({ design: window.__design, landing: null }),
+        { status: 200, headers: { 'content-type': 'application/json' } }
+      ));
+    }
+    if (u.includes('/api/')) {
+      return Promise.resolve(new Response('{}',
+        { status: 200, headers: { 'content-type': 'application/json' } }));
+    }
+    return __realFetch(url, opts);
+  };
+  window.HS_SITE_DESIGN = window.__design;
+</script>
+<script src="gallery/assets/site.js"></script>
+<script src="gallery/assets/renderers.js"></script>
+</head>
+<body>
+  <h1>Tarjetas del catálogo · foto de fondo con degradado (referencia del flyer)</h1>
+  <div class="packages-grid" id="grid"></div>
+
+  <script>
+    const pkg = (tier, label, name, image) => ({
+      id: 1,
+      name,
+      subtitle: 'Una experiencia que merece ser recordada',
+      urlImage: image,
+      tier: { key: tier },
+      tierLabel: label,
+      categoryKey: 'xv-anos',
+      packageCategory: { name: 'XV Años' },
+      categoryIcon: '👑',
+      priceFormatted: '$9,950',
+      currency: 'MXN',
+      services: [
+        { name: '50 fotografías impresas · 5 × 7', iconSvg: '' },
+        { name: '250 fotografías digitales mínimo', iconSvg: '' },
+        { name: 'Video highlights del evento', iconSvg: '' },
+        { name: 'Vuelo de dron', iconSvg: '' },
+      ],
+    });
+
+    document.getElementById('grid').innerHTML = [
+      renderPackageCard(pkg('premium', 'Premium', 'XV Años Premium', 'images/banner.jpg')),
+      renderPackageCard(pkg('gold', 'Gold', 'XV Años Gold', 'images/review.jpg')),
+      renderPackageCard(pkg('basic', 'Basic', 'XV Años Basic', 'images/boungle.jpg')),
+    ].join('');
+  </script>
+</body>
+</html>

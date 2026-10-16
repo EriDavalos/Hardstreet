@@ -172,7 +172,12 @@ panel DISEÑA y la web APLICA en vivo al cargar (`GET /api/site` →
     "serifNames": true, "uppercaseNames": false,
     "showCategory": true, "showSubtitle": true, "showServiceCount": true,
     "showServices": true, "servicesLimit": 6, "showPrice": true, "showCta": true,
-    "priceLabel": "Desde", "ctaLabel": "Cotizar"
+    "priceLabel": "Desde", "ctaLabel": "Cotizar",
+    // FOTO del paquete dentro de la tarjeta: 'none' (sin foto) | 'top' (banda
+    // arriba, con `imageHeight`) | 'bg' (de FONDO: la foto se ve a todo color y
+    // encima lleva un degradado del color de la tarjeta —el de su tier— que
+    // manda `imageFade`: abajo y a la izquierda tapa más, así se lee el texto).
+    "imageMode": "none", "imageHeight": 150, "imageFade": 0.7
   },
   "tiers": {
     "premium": { "accent": "#C9A96E", "accentSoft": "#F0D48A", "dark": "#0B0E17", "badgeFilled": true, "borderAlpha": 0.55 },

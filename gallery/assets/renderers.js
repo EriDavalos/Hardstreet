@@ -37,7 +37,8 @@ function designCtaLabel() {
  * FOTO del paquete dentro de su tarjeta, si el diseño la pide.
  *
  *   'top' → banda arriba (el alto lo fija el CSS con `imageHeight`)
- *   'bg'  → de fondo, oscurecida por el CSS (`imageFade`)
+ *   'bg'  → de fondo: la foto se ve y encima va el degradado del CSS, con el
+ *           color de la tarjeta y la fuerza de `imageFade`
  *
  * La foto es la del paquete (`url_image`) y, si no tiene, una del pool: es la
  * misma que ya usan los carruseles, así que no hay otra fuente que mantener.
