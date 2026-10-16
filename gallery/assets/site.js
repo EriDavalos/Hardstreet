@@ -120,6 +120,119 @@ function hsCategoryKey(name) {
     .replace(/^-+|-+$/g, '');
 }
 
+// ==================================================================
+// FOTOS EN DOS TIEMPOS (miniatura → original)
+// ==================================================================
+// Las fotos que el panel toma del Drive viven en el servidor del Drive, y ese
+// MISMO servidor sabe hacer miniaturas (`/thumb/<ruta>?w=N`). Así que una foto
+// de la página se pide en DOS tiempos: primero la miniatura (unos cuantos KB:
+// aparece casi al instante, aunque borrosa) y cuando la original termina de
+// bajar se cambia por ella. La miniatura se ve borrosa mientras tanto (`class
+// hs-img-low`), que es la pista de que la foto todavía está mejorando.
+//
+// Solo aplica a las fotos del DRIVE (cualquier URL con `/files/<ruta>`): las
+// imágenes propias del sitio (`images/…`) no tienen miniatura y se cargan como
+// siempre.
+
+/** Ancho de la miniatura para una foto de la galería. */
+const HS_THUMB_WIDTH = 320;
+
+/** Ancho de la miniatura de un FONDO (se ve a pantalla completa). */
+const HS_THUMB_WIDTH_BG = 1280;
+
+/** ¿Es una URL de una foto del Drive? (`<servidor>/files/<ruta>`). */
+function hsIsDriveImage(url) {
+  return String(url == null ? '' : url).indexOf('/files/') !== -1;
+}
+
+/**
+ * URL de la MINIATURA de una foto del Drive (null si no es del Drive).
+ * Puro: mismo URL → misma miniatura, se puede probar sin navegador.
+ */
+function hsThumbUrl(url, width) {
+  const clean = String(url == null ? '' : url).trim();
+  const cut = clean.indexOf('/files/');
+  if (cut === -1) return null;
+  const base = clean.slice(0, cut);
+  // Sin query ni hash (ni `/files/` del final): la miniatura se pide por RUTA.
+  const path = clean.slice(cut + '/files/'.length).split(/[?#]/)[0];
+  if (!path) return null;
+  const n = Number(width);
+  const w = Math.max(32, Math.min(2048, Math.round(n > 0 ? n : HS_THUMB_WIDTH)));
+  return `${base}/thumb/${path}?w=${w}`;
+}
+
+/** `<img>` de una foto, en DOS tiempos si es del Drive. Puro. */
+function hsGalleryImgHtml(url, alt, opts) {
+  const clean = String(url == null ? '' : url).replace(/["<>]/g, '').trim();
+  if (!clean) return '';
+  const safeAlt = hsEsc(alt);
+  const thumb = hsThumbUrl(clean, opts && opts.width);
+  if (!thumb) return `<img src="${clean}" alt="${safeAlt}" loading="lazy" />`;
+  return `<img src="${thumb}" data-hs-full="${clean}" class="hs-img-low"` +
+    ` alt="${safeAlt}" loading="lazy" />`;
+}
+
+/**
+ * Pinta una foto en DOS tiempos: miniatura ya, original cuando llegue.
+ * Devuelve true si quedó en dos tiempos (hay miniatura).
+ */
+function hsLoadProgressiveImage(el, url, opts) {
+  const full = String(url == null ? '' : url).trim();
+  if (!el || !full) return false;
+  const thumb = hsThumbUrl(full, opts && opts.width);
+  if (!thumb) {
+    el.setAttribute('src', full);
+    return false;
+  }
+  el.classList.add('hs-img-low');
+  el.setAttribute('src', thumb);
+  const full1 = new Image();
+  full1.onload = () => {
+    el.setAttribute('src', full);
+    el.classList.remove('hs-img-low');
+  };
+  // Si la original no llega (foto movida, sesión del Drive, red): se queda la
+  // miniatura a la vista, sin el desenfoque (mejor eso que un hueco).
+  full1.onerror = () => el.classList.remove('hs-img-low');
+  full1.src = full;
+  return true;
+}
+
+/** Igual que [hsLoadProgressiveImage] pero para un FONDO (hero, divisor). */
+function hsLoadProgressiveBackground(el, url, opts) {
+  const full = String(url == null ? '' : url).trim();
+  if (!el || !full) return false;
+  const thumb = hsThumbUrl(full, (opts && opts.width) || HS_THUMB_WIDTH_BG);
+  if (!thumb) {
+    el.style.backgroundImage = `url("${full}")`;
+    return false;
+  }
+  el.style.backgroundImage = `url("${thumb}")`;
+  const full1 = new Image();
+  full1.onload = () => { el.style.backgroundImage = `url("${full}")`; };
+  full1.src = full;
+  return true;
+}
+
+/**
+ * Aplica el modo en dos tiempos a todo lo que quedó marcado con
+ * `data-hs-full` (los HTML que se arman aquí ya traen la miniatura puesta).
+ */
+function hsScanProgressiveImages(root) {
+  if (typeof document === 'undefined') return 0;
+  const scope = root || document;
+  let n = 0;
+  scope.querySelectorAll('[data-hs-full]').forEach((el) => {
+    const full = el.getAttribute('data-hs-full');
+    el.removeAttribute('data-hs-full');
+    if (el.tagName === 'IMG') hsLoadProgressiveImage(el, full);
+    else hsLoadProgressiveBackground(el, full);
+    n++;
+  });
+  return n;
+}
+
 /**
  * Opciones de UNA sección, mezcladas con las de fábrica.
  * Lo que no venga en el documento se queda como siempre (una sección nueva o
@@ -193,15 +306,25 @@ function siteContentPlan(rawLanding) {
   for (const name of Object.keys(SITE_SECTIONS_DEFAULT)) {
     sections[name] = hsSectionProps(name, l);
   }
+  // Las secciones AGREGADAS (una segunda galería, otro divisor…): el panel las
+  // guarda aparte porque el HTML no tiene ganchos para ellas.
+  const extras = hsExtraSections(l);
   const galleryCategories = hsGalleryCategories(sections.gallery);
   const testimonials = hsTestimonials(sections.testimonials);
   const whatsapp = String(sections.contact.whatsapp == null ? '' : sections.contact.whatsapp)
     .replace(/[^0-9]/g, '');
+  // La visibilidad y el orden de las copias viajan con las de las secciones de
+  // fábrica: así el orden de la página se calcula de una sola vez.
+  const layout = { ...(l.sections || {}) };
+  for (const ex of extras) {
+    layout[ex.id] = { visible: ex.visible, order: ex.order };
+  }
   return {
     texts: l.texts || {},
     images: l.images || {},
-    layout: l.sections || {},
+    layout,
     sections,
+    extras,
     stats: hsStats(sections.about),
     gallery: { categories: galleryCategories, custom: galleryCategories.length > 0 },
     testimonials,
@@ -209,6 +332,63 @@ function siteContentPlan(rawLanding) {
     services: { perSlide: Number(sections.services.servicesPerSlide) || 4 },
     contact: { whatsapp, whatsappUrl: whatsapp ? `https://wa.me/${whatsapp}` : '' },
   };
+}
+
+// ---------- secciones AGREGADAS ----------
+
+/**
+ * Las secciones agregadas del documento, ya limpias y ordenadas. PURA (mismo
+ * documento → mismo resultado): la usa el plan y las pruebas la revisan sin
+ * navegador.
+ *
+ * Cada copia necesita su `id` (el nombre de la instancia: `gallery-2`), de qué
+ * `key` es copia y lo que se escribió para ella. Lo que no sirva se descarta:
+ * una copia sin id o sin plantilla no se puede pintar.
+ */
+function hsExtraSections(rawLanding) {
+  const l = rawLanding && typeof rawLanding === 'object' ? rawLanding : {};
+  const raw = Array.isArray(l.extraSections) ? l.extraSections : [];
+  const out = [];
+  const seen = new Set();
+  for (const e of raw) {
+    if (!e || typeof e !== 'object') continue;
+    const id = String(e.id == null ? '' : e.id).trim();
+    const key = String(e.key == null ? '' : e.key).trim();
+    // Sin nombre o sin plantilla no hay nada que clonar; y un nombre repetido
+    // dejaría la página con dos secciones iguales.
+    if (!id || !key || seen.has(id)) continue;
+    seen.add(id);
+    out.push({
+      id,
+      key,
+      visible: e.visible !== false,
+      order: Number.isFinite(Number(e.order)) ? Number(e.order) : 0,
+      texts: hsCleanMap(e.texts),
+      images: hsCleanMap(e.images),
+      props: e.props && typeof e.props === 'object' ? e.props : {},
+    });
+  }
+  return out;
+}
+
+/** Pares clave → texto, sin vacíos ni valores raros. */
+function hsCleanMap(v) {
+  const out = {};
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return out;
+  for (const [k, value] of Object.entries(v)) {
+    const text = String(value == null ? '' : value).trim();
+    if (k && text) out[k] = text;
+  }
+  return out;
+}
+
+/**
+ * Plan de UNA copia: sus opciones (galería, números, testimonios, WhatsApp…)
+ * mezcladas con las de fábrica, como si fuera una sección normal. Es lo que
+ * permite pintar la copia con SU contenido y no con el de la original.
+ */
+function extraSectionPlan(ex) {
+  return siteContentPlan({ sections: { [ex.key]: { props: ex.props } } });
 }
 
 // ---------- el diseño → CSS ----------
@@ -349,14 +529,20 @@ function applySiteContent(rawLanding) {
     const url = String(value).trim();
     // Un valor con comillas o paréntesis rompería el CSS: se ignora.
     if (/[")]/.test(url)) continue;
-    if (el.tagName === 'IMG') el.setAttribute('src', url);
-    else el.style.backgroundImage = `url("${url}")`;
+    // La foto entra en DOS tiempos (miniatura y luego la original) cuando
+    // viene del Drive; si es una imagen propia del sitio, como siempre.
+    if (el.tagName === 'IMG') hsLoadProgressiveImage(el, url);
+    else hsLoadProgressiveBackground(el, url);
   }
-  applySectionOrder(plan.layout);
   applyStats(plan);
   applyGalleryContent(plan);
   applyTestimonials(plan);
   applyWhatsapp(plan);
+  // Las secciones AGREGADAS: se levantan DESPUÉS de que las de fábrica tengan
+  // su contenido, así la copia nace con lo mismo y luego se le aplica lo suyo.
+  applyExtraSections(plan);
+  // El orden va al final: tiene que ver también a las copias.
+  applySectionOrder(plan.layout);
   return plan;
 }
 
@@ -376,8 +562,9 @@ function contactHref(value, kind) {
  * Si el panel agrega más de los que trae el HTML, se clonan los bloques; si
  * deja menos, los que sobran se ocultan (no se borran: pueden volver).
  */
-function applyStats(plan) {
-  const wrap = document.querySelector('.about-stats');
+function applyStats(plan, root) {
+  const scope = root || document;
+  const wrap = scope.querySelector('.about-stats');
   if (!wrap || !plan.stats.length) return;
   const blocks = [...wrap.querySelectorAll('[data-hs-stat]')];
   if (!blocks.length) return;
@@ -423,7 +610,7 @@ function galleryHtml(plan) {
       if (!url) continue;
       out.push(
         `<div class="gallery-item ${i % 3 === 0 ? 'tall' : ''} reveal" data-category="${hsEsc(c.key)}">` +
-          `<img src="${url}" alt="${hsEsc(c.name)}" loading="lazy" />` +
+          hsGalleryImgHtml(url, c.name) +
           `<div class="gallery-item-overlay"><h3>${hsEsc(c.name)}</h3><p>Fotografía</p></div>` +
           '<div class="gallery-item-line"></div>' +
         '</div>'
@@ -438,17 +625,24 @@ function galleryHtml(plan) {
  * Galería con las fotos elegidas en el panel. Sin fotos configuradas NO se
  * toca nada: la página sigue mostrando la galería pública de siempre.
  */
-function applyGalleryContent(plan) {
+function applyGalleryContent(plan, root) {
   if (!plan.gallery.custom) return false;
-  const grid = document.querySelector('.gallery-grid');
+  const scope = root || document;
+  const grid = scope.querySelector('.gallery-grid');
   if (!grid) return false;
-  const filters = document.querySelector('.gallery-filters');
+  const filters = scope.querySelector('.gallery-filters');
   if (filters) filters.innerHTML = galleryFiltersHtml(plan);
+  // Las fotos que vinieron del Drive arrancan con su miniatura: aquí se les
+  // engancha la original (baja → alta calidad).
   grid.innerHTML = galleryHtml(plan);
+  hsScanProgressiveImages(grid);
   if (window.HSRevealObserver) {
     grid.querySelectorAll('.reveal').forEach((el) => window.HSRevealObserver.observe(el));
   }
-  if (typeof window.HSBindGalleryFilters === 'function') window.HSBindGalleryFilters();
+  // Los filtros se enganchan SOLO a esta galería (cada una con los suyos).
+  if (typeof window.HSBindGalleryFilters === 'function') {
+    window.HSBindGalleryFilters(root ? scope : undefined);
+  }
   return true;
 }
 
@@ -472,18 +666,48 @@ function testimonialsHtml(plan) {
  * Comentarios de clientes: sin nada escrito, se quedan los que trae el HTML
  * (así la sección nunca aparece vacía por no haberla llenado todavía).
  */
-function applyTestimonials(plan) {
+function applyTestimonials(plan, root) {
   if (!plan.testimonials.length) return false;
-  const slider = document.querySelector('.testimonial-slider');
+  const scope = root || document;
+  const slider = scope.querySelector('.testimonial-slider');
   if (!slider) return false;
   slider.innerHTML = testimonialsHtml(plan);
-  if (typeof window.HSInitTestimonials === 'function') window.HSInitTestimonials();
+  // En una COPIA el carrusel se maneja aquí dentro: el de index.js se queda
+  // con los testimonios de la página, y si no, los dos se pisarían (los
+  // comentarios de una sección girarían en la otra).
+  if (root) hsInitInstanceTestimonials(scope);
+  else if (typeof window.HSInitTestimonials === 'function') window.HSInitTestimonials();
   return true;
 }
 
+/**
+ * Carrusel de testimonios de UNA copia: sus comentarios, sus puntos y su
+ * propio giro automático, sin tocar los de las demás secciones.
+ */
+function hsInitInstanceTestimonials(scope) {
+  const items = [...scope.querySelectorAll('.testimonial-item')];
+  const dots = [...scope.querySelectorAll('.testimonial-dots .dot')];
+  if (!items.length) return;
+  const show = (i) => {
+    items.forEach((el, k) => el.classList.toggle('active', k === i));
+    dots.forEach((d, k) => d.classList.toggle('active', k === i));
+  };
+  show(0);
+  dots.forEach((dot, i) => {
+    const index = Number(dot.getAttribute('data-index'));
+    dot.addEventListener('click', () => show(Number.isFinite(index) ? index : i));
+  });
+  if (items.length > 1) {
+    setInterval(() => {
+      const current = items.findIndex((el) => el.classList.contains('active'));
+      show((current + 1) % items.length);
+    }, 5000);
+  }
+}
+
 /** WhatsApp del contacto (si se configuró en el panel). */
-function applyWhatsapp(plan) {
-  const block = document.querySelector('[data-hs-whatsapp]');
+function applyWhatsapp(plan, root) {
+  const block = (root || document).querySelector('[data-hs-whatsapp]');
   if (!block) return false;
   if (!plan.contact.whatsappUrl) {
     block.style.display = 'none';
@@ -492,6 +716,70 @@ function applyWhatsapp(plan) {
   block.style.display = '';
   block.querySelectorAll('a').forEach((a) => a.setAttribute('href', plan.contact.whatsappUrl));
   return true;
+}
+
+// ---------- secciones AGREGADAS (copias) ----------
+
+/**
+ * Pinta las secciones AGREGADAS: cada una es una COPIA de su sección de
+ * fábrica, con su propio nombre (`gallery-2`) y su contenido encima.
+ *
+ * Se copia el bloque tal como quedó (ya con los textos, las fotos y los
+ * fondos de la sección original aplicados), así la copia nace viéndose igual;
+ * después se le pone lo que se haya escrito para ella y se vuelven a pintar
+ * las partes que salen de datos (números, galería, testimonios, WhatsApp).
+ *
+ * Es IDEMPOTENTE: primero se quita lo agregado antes, así aplicar el documento
+ * otra vez (o guardar sin cambios) no duplica la página.
+ */
+function applyExtraSections(plan) {
+  if (typeof document === 'undefined') return 0;
+  document.querySelectorAll('[data-hs-extra]').forEach((el) => el.remove());
+  let n = 0;
+  for (const ex of plan.extras || []) {
+    const src = document.querySelector(`[data-hs-section="${ex.key}"]`);
+    // Sin la sección de la que copiar (una plantilla que ya no existe) no hay
+    // nada que hacer: la página se queda como está.
+    if (!src || !src.parentNode) continue;
+    const copy = src.cloneNode(true);
+    copy.setAttribute('data-hs-section', ex.id);
+    copy.setAttribute('data-hs-extra', ex.id);
+    // Sin `id` repetidos: los enlaces internos (`#gallery`) siguen apuntando a
+    // la sección original y no a la copia.
+    copy.removeAttribute('id');
+    copy.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+    hsApplyInstanceContent(copy, ex);
+    src.parentNode.insertBefore(copy, src.nextSibling);
+    n++;
+  }
+  return n;
+}
+
+/**
+ * El contenido de UNA copia: sus textos, sus imágenes y sus opciones.
+ * Lo que no traiga se queda como estaba (lo heredó de la sección original).
+ */
+function hsApplyInstanceContent(root, ex) {
+  for (const [key, value] of Object.entries(ex.texts)) {
+    const el = root.querySelector(`[data-hs="${key}"]`);
+    if (el && value != null) setHsText(el, String(value));
+  }
+  for (const [key, value] of Object.entries(ex.images)) {
+    const el = root.querySelector(`[data-hs-img="${key}"]`);
+    if (!el || !value) continue;
+    const url = String(value).trim();
+    // Un valor con comillas o paréntesis rompería el CSS: se ignora.
+    if (/[")]/.test(url)) continue;
+    if (el.tagName === 'IMG') hsLoadProgressiveImage(el, url);
+    else hsLoadProgressiveBackground(el, url);
+  }
+  // Lo que sale de DATOS se vuelve a pintar dentro de la copia con SUS
+  // opciones (si la copia no trae ninguna, esto repite lo de la original).
+  const sub = extraSectionPlan(ex);
+  applyStats(sub, root);
+  applyGalleryContent(sub, root);
+  applyTestimonials(sub, root);
+  applyWhatsapp(sub, root);
 }
 
 /**
@@ -693,6 +981,15 @@ window.HSSite = {
   applyTestimonials,
   applyWhatsapp,
   galleryHtml,
+  galleryImg: hsGalleryImgHtml,
+  thumbnail: hsThumbUrl,
+  isDriveImage: hsIsDriveImage,
+  loadImage: hsLoadProgressiveImage,
+  loadBackground: hsLoadProgressiveBackground,
+  scanImages: hsScanProgressiveImages,
+  extraSections: hsExtraSections,
+  extraPlan: extraSectionPlan,
+  applyExtras: applyExtraSections,
   galleryFiltersHtml,
   testimonialsHtml,
   groupPackages,

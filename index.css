@@ -2150,3 +2150,15 @@ section[id] { scroll-margin-top: 84px; }
     justify-content: center;
   }
 }
+
+/* ========== FOTOS EN DOS TIEMPOS (miniatura → original) ==========
+   Las fotos del Drive (las que se eligen desde el panel) arriba primero como
+   MINIATURA —unos cuantos KB del mismo servidor del Drive— y cuando la
+   original termina de bajar se cambia por ella. Mientras se ve la miniatura
+   lleva esta clase: un desenfoque suave (y un pelín de zoom) que se va con una
+   transición en cuanto llega la buena. Es el "todavía está mejorando". */
+img.hs-img-low {
+  filter: blur(16px);
+  transform: scale(1.04);
+  transition: filter 0.5s ease, transform 0.5s ease;
+}

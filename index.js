@@ -155,6 +155,29 @@ function observeStats() {
 }
 window.HSObserveStats = observeStats;
 
+// ========== FOTOS EN DOS TIEMPOS (miniatura → original) ==========
+// Las fotos del Drive (las que el panel elige) se piden dos veces: primero la
+// miniatura que genera el mismo servidor del Drive (`/thumb/<ruta>?w=N`) y, ya
+// que la original bajó, la original. Así la página se ve llena enseguida y las
+// fotos van mejorando. El HTML lo arma el módulo del sitio (site.js); si no
+// está cargado, la foto se pinta tal cual (la página nunca se queda sin foto).
+function galleryImgTag(url, alt) {
+  const clean = String(url == null ? '' : url).trim();
+  if (!clean) return '';
+  if (window.HSSite && typeof window.HSSite.galleryImg === 'function') {
+    return window.HSSite.galleryImg(clean, alt);
+  }
+  const safeAlt = String(alt == null ? '' : alt).replace(/[<>]/g, '');
+  return `<img src="${clean.replace(/["<>]/g, '')}" alt="${safeAlt}" loading="lazy" />`;
+}
+
+/** Engancha la foto buena a las que arrancaron con su miniatura. */
+function scanProgressiveImages(root) {
+  if (window.HSSite && typeof window.HSSite.scanImages === 'function') {
+    window.HSSite.scanImages(root);
+  }
+}
+
 // ========== GALERIA DESTACADA (desde la API: fotos publicas) ==========
 // Cada foto trae su categoria (packages_categories). Los filtros se generan
 // con las categorias que REALLY tienen fotos publicas.
@@ -176,7 +199,7 @@ function renderPublicGallery() {
 
   grid.innerHTML = fotos.map((foto, i) => `
     <div class="gallery-item ${i % 3 === 0 ? 'tall' : ''} reveal" data-category="${foto.categoryKey}">
-      <img src="${foto.url}" alt="${foto.categoryName}" loading="lazy" />
+      ${galleryImgTag(foto.url, foto.categoryName)}
       <div class="gallery-item-overlay">
         <h3>${foto.categoryName}</h3>
         <p>${foto.galleryType === 'video' ? 'Video' : 'Fotografía'}</p>
@@ -184,6 +207,8 @@ function renderPublicGallery() {
       <div class="gallery-item-line"></div>
     </div>
   `).join('');
+  // Las fotos que vengan del Drive mejoran solas (miniatura → original).
+  scanProgressiveImages(grid);
 
   // Re-vincular filtros y reveals (el HTML se recreo)
   bindGalleryFilters();
@@ -191,13 +216,21 @@ function renderPublicGallery() {
   bindCursorHover();
 }
 
-function bindGalleryFilters() {
-  document.querySelectorAll('.filter-btn').forEach(btn => {
+function bindGalleryFilters(root) {
+  const scope = root && root.querySelectorAll ? root : document;
+  scope.querySelectorAll('.filter-btn').forEach(btn => {
+    // Un botón se engancha UNA vez: al repintar la galería los botones son
+    // nuevos, así que se vuelven a llamar solos.
+    if (btn.dataset.hsBound === '1') return;
+    btn.dataset.hsBound = '1';
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      // Se filtra la galería del botón: con varias galerías en la página, cada
+      // una responde a sus propios filtros.
+      const section = btn.closest('section') || scope;
+      section.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const filter = btn.getAttribute('data-filter');
-      document.querySelectorAll('.gallery-item').forEach(item => {
+      section.querySelectorAll('.gallery-item').forEach(item => {
         if (filter === 'all' || item.getAttribute('data-category') === filter) {
           item.style.opacity = '0'; item.style.transform = 'scale(0.8)';
           setTimeout(() => {
@@ -390,7 +423,7 @@ function renderExternCarousel() {
     <div class="extern-slide ${index === 0 ? 'active' : ''}">
       <div class="extern-slide-media">
         <div class="extern-slide-image">
-          <img src="${imageForPackage(service, index)}" alt="${service.name}" loading="lazy" />
+          ${galleryImgTag(imageForPackage(service, index), service.name)}
         </div>
         <div class="extern-slide-medal">${service.categoryIcon}</div>
       </div>
@@ -418,6 +451,10 @@ function renderExternCarousel() {
   dotsContainer.innerHTML = services.map((_, index) => `
     <span class="extern-dot ${index === 0 ? 'active' : ''}" onclick="goToExternSlide(${index})"></span>
   `).join('');
+
+  // Las imágenes del panel que vengan del Drive (url_image) también mejoran
+  // solas: miniatura primero, original después.
+  scanProgressiveImages(container);
 
   const counter = document.getElementById('externCounter');
   if (counter) counter.innerHTML = `<span>01</span> / ${String(services.length).padStart(2, '0')}`;
