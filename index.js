@@ -385,8 +385,17 @@ function filterPackages() {
       card.style.display = 'block';
       card.style.animation = 'none';
       card.offsetHeight; // Trigger reflow
-      card.style.animation = `pkgFadeIn 0.5s ease forwards ${index * 0.05}s`;
+      // La entrada la manda el DISEÑO de las tarjetas (panel → sitio): así
+      // filtrar por categoría se ve igual que cargar la página.
+      const anim = window.HSSite && window.HSSite.cardAnim
+        ? window.HSSite.cardAnim(index + 1)
+        : { animation: 'pkgFadeIn 0.5s ease forwards', delay: `${index * 0.05}s` };
+      card.style.animation = anim.animation;
+      card.style.animationDelay = anim.delay;
     } else {
+      // Sin retardo: el retardo escalonado de la entrada no debe retrasar la
+      // salida de las que se van.
+      card.style.animationDelay = '0ms';
       card.style.animation = 'pkgFadeOut 0.3s ease forwards';
       setTimeout(() => { card.style.display = 'none'; }, 300);
     }

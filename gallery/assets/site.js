@@ -38,6 +38,15 @@ const SITE_DESIGN_DEFAULT = {
     showCta: true,
     priceLabel: 'Desde',
     ctaLabel: 'Cotizar',
+    // Foto del paquete dentro de la tarjeta: 'none' (sin foto), 'top' (banda
+    // arriba) o 'bg' (de fondo, oscurecida por imageFade).
+    imageMode: 'none',
+    imageHeight: 150,
+    imageFade: 0.35,
+    // Entrada de las tarjetas del catálogo: 'up' | 'fade' | 'zoom' | 'none'.
+    animMode: 'up',
+    animMs: 600,
+    animStagger: 100,
   },
   tiers: {
     premium: { accent: '#C9A96E', accentSoft: '#F0D48A', dark: '#0B0E17', badgeFilled: true, borderAlpha: 0.55 },
@@ -479,6 +488,23 @@ function siteDesignCss(rawDesign) {
     );
   }
 
+  // FOTO del paquete. La foto la pinta `renderers.js` (de los paquetes de la
+  // web); aquí solo se decide DÓNDE va y cuánto se ve.
+  const imageMode = String(c.imageMode || 'none');
+  if (imageMode === 'top') {
+    const h = Math.max(0, Number(c.imageHeight) || 0);
+    r.push(`.pkg-photo{display:block;width:100%;height:${h}px;object-fit:cover;}`);
+  } else if (imageMode === 'bg') {
+    const fade = Math.max(0, Math.min(1,
+      c.imageFade === undefined || c.imageFade === null ? 0.35 : Number(c.imageFade)));
+    r.push(
+      '.pkg-photo-bg{position:absolute;inset:0;background-size:cover;' +
+        `background-position:center;opacity:${fade};pointer-events:none;}`
+    );
+    // Con la foto de fondo, el contenido sube de capa para seguir leyéndose.
+    r.push('.package-card>.pkg-flyer-inner{position:relative;z-index:1;}');
+  }
+
   // Forma, densidad y comportamiento
   r.push(`.package-card{border-radius:${Number(c.radius) || 0}px;}`);
   r.push(`.pkg-flyer-inner{padding:${Number(c.padding) || 0}px;}`);
@@ -500,6 +526,40 @@ function siteDesignCss(rawDesign) {
   if (hide.length) r.push(`${hide.join(',')}{display:none !important;}`);
   // El separador de arriba del listado pierde sentido sin lista.
   if (!c.showServices) r.push('.pkg-divider{display:none !important;}');
+
+  // ENTRADA de las tarjetas del catálogo.
+  //
+  // Las tarjetas llegan con la clase `reveal` (opacidad 0 y 60px abajo hasta
+  // que el scroll las activa) y con un `animation: pkgFadeIn … forwards` de
+  // index.css; con `forwards` el transform quedaba CONGELADO y la tarjeta no
+  // se elevaba al pasar el mouse. Aquí se neutraliza el reveal y la animación
+  // termina en el estado natural (`backwards`), así el hover vuelve a funcionar.
+  const anim = String(c.animMode || 'none');
+  const animMs = Math.max(0, Math.round(Number(c.animMs) || 0));
+  const stagger = Math.max(0, Math.round(Number(c.animStagger) || 0));
+  r.push(
+    '.packages-grid .package-card.reveal{opacity:1;transform:none;' +
+      'transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .5s ease;}'
+  );
+  if (c.hoverLift) {
+    r.push('.packages-grid .package-card.reveal:hover{transform:translateY(-8px);}');
+  }
+  if (anim === 'none' || !animMs) {
+    r.push('.packages-grid .package-card{animation:none;}');
+  } else {
+    r.push(`@keyframes hsPkgIn{from{${hsCardFrom(anim)}}to{opacity:1;transform:none;}}`);
+    r.push(
+      '.packages-grid .package-card{' +
+        `animation:hsPkgIn ${animMs}ms cubic-bezier(.4,0,.2,1) backwards;}`
+    );
+  }
+  // El retardo escalonado se emite SIEMPRE (aunque sea 0): así manda sobre los
+  // retardos fijos de index.css y "todas a la vez" es de verdad todas.
+  for (let i = 1; i <= 14; i++) {
+    r.push(
+      `.packages-grid .package-card:nth-child(${i}){animation-delay:${(i - 1) * stagger}ms;}`
+    );
+  }
 
   // Variante por TIER (lo que hace que cada nivel se distinga de un vistazo)
   for (const key of HS_TIERS) {
@@ -527,6 +587,34 @@ function siteDesignCss(rawDesign) {
     );
   }
   return r.join('\n');
+}
+
+/** Fotograma inicial de la entrada de las tarjetas, según el modo. */
+function hsCardFrom(mode) {
+  if (mode === 'zoom') return 'opacity:0;transform:scale(.94);';
+  if (mode === 'fade') return 'opacity:0;';
+  return 'opacity:0;transform:translateY(20px);';
+}
+
+/**
+ * Animación de entrada de UNA tarjeta, según el diseño guardado.
+ *
+ * La usa el filtro por categoría (`index.js`), que vuelve a animar las tarjetas
+ * que aparecen: así filtrar se ve igual que cargar la página. El pintado
+ * inicial lo hace el CSS de [siteDesignCss] con los MISMOS valores.
+ */
+function hsCardAnim(index) {
+  const design = window.HS_SITE_DESIGN || SITE_DESIGN_DEFAULT;
+  const c = (design && design.card) || {};
+  const mode = String(c.animMode || 'none');
+  const ms = Math.max(0, Math.round(Number(c.animMs) || 0));
+  const stagger = Math.max(0, Math.round(Number(c.animStagger) || 0));
+  const i = Math.max(1, Math.round(Number(index) || 1));
+  if (mode === 'none' || !ms) return { animation: 'none', delay: '0ms' };
+  return {
+    animation: `hsPkgIn ${ms}ms cubic-bezier(.4,0,.2,1) backwards`,
+    delay: `${(i - 1) * stagger}ms`,
+  };
 }
 
 /** Aplica el diseño a la página (idempotente: reemplaza el <style> anterior). */
@@ -947,10 +1035,12 @@ function loadSiteConfig() {
     applySiteDesign(design);
     const plan = applySiteContent(landing);
     // En las páginas que ya pintaron tarjetas antes de llegar aquí (los tableros
-    // no esperan a la API), los textos del diseño y el tope de servicios se
-    // corrigen en el momento.
+    // no esperan a la API), los textos del diseño, el tope de servicios y la
+    // FOTO se corrigen en el momento (la foto la sabe poner `renderers.js`, que
+    // puede no estar cargado en otras páginas).
     refreshDesignTexts(document);
     trimServiceLists(document);
+    if (typeof refreshPackagePhotos === 'function') refreshPackagePhotos(document);
     return { design: hsMerge(SITE_DESIGN_DEFAULT, design || {}), landing, plan };
   })();
   return hsSiteLoaded;
@@ -1034,6 +1124,7 @@ window.HSSite = {
   defaults: SITE_DESIGN_DEFAULT,
   apply: applySiteDesign,
   css: siteDesignCss,
+  cardAnim: hsCardAnim,
   trimServices: trimServiceLists,
   refreshTexts: refreshDesignTexts,
   merge: hsMerge,

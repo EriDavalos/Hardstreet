@@ -60,6 +60,9 @@ test('sin diseño guardado se aplican los defaults (nada cambia)', () => {
 
 test('un documento incompleto no rompe el diseño (se mezcla con los defaults)', () => {
   const css = cssWith({ card: { columns: 2 } });
+  // Lo que no vino (foto, animación) se queda con su valor de siempre.
+  assert.doesNotMatch(css, /pkg-photo/);
+  assert.match(css, /animation:hsPkgIn 600ms/);
   assert.match(css, /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   // Lo que no vino, sigue con su valor de siempre.
   assert.match(css, /\.package-card\{border-radius:18px;\}/);
@@ -135,6 +138,165 @@ test('la paleta de cada tier se aplica a su tarjeta', () => {
 test('el CSS es puro: mismo diseño, mismo resultado', () => {
   const design = { card: { columns: 2, radius: 7 }, brand: { gold: '#123456' } };
   assert.equal(cssWith(design), cssWith(structuredClone(design)));
+});
+
+// ------------------------------------------------------------------
+// 2b. Foto del paquete y animación de entrada
+// ------------------------------------------------------------------
+
+test('sin foto en el diseño no se pinta ninguna foto', () => {
+  const css = cssWith(null);
+  assert.doesNotMatch(css, /\.pkg-photo\{/);
+  assert.doesNotMatch(css, /\.pkg-photo-bg\{/);
+});
+
+test('la foto va en banda arriba con el alto del diseño', () => {
+  const css = cssWith({ card: { imageMode: 'top', imageHeight: 220 } });
+  assert.match(css, /\.pkg-photo\{display:block;width:100%;height:220px;object-fit:cover;\}/);
+  // En modo banda, la foto de fondo no existe.
+  assert.doesNotMatch(css, /pkg-photo-bg/);
+});
+
+test('la foto de fondo se oscurece con la opacidad y el contenido sube de capa', () => {
+  const css = cssWith({ card: { imageMode: 'bg', imageFade: 0.8 } });
+  assert.match(css, /\.pkg-photo-bg\{position:absolute;inset:0;background-size:cover;/);
+  assert.match(css, /opacity:0\.8;/);
+  assert.match(css, /\.package-card>\.pkg-flyer-inner\{position:relative;z-index:1;\}/);
+});
+
+test('un modo de foto desconocido cae a "sin foto"', () => {
+  const css = cssWith({ card: { imageMode: 'flotante' } });
+  assert.doesNotMatch(css, /pkg-photo/);
+});
+
+test('la entrada de las tarjetas se anima como diga el diseño', () => {
+  const up = cssWith(null); // por defecto: subir 600 ms escalonado
+  assert.match(up, /@keyframes hsPkgIn\{from\{opacity:0;transform:translateY\(20px\);\}to\{opacity:1;transform:none;\}\}/);
+  assert.match(up, /animation:hsPkgIn 600ms cubic-bezier\(\.4,0,\.2,1\) backwards;/);
+  assert.match(up, /\.packages-grid \.package-card:nth-child\(3\)\{animation-delay:200ms;\}/);
+
+  const zoom = cssWith({ card: { animMode: 'zoom', animMs: 300, animStagger: 0 } });
+  assert.match(zoom, /from\{opacity:0;transform:scale\(\.94\);\}/);
+  assert.match(zoom, /animation:hsPkgIn 300ms/);
+  assert.match(zoom, /:nth-child\(4\)\{animation-delay:0ms;\}/);
+
+  const fade = cssWith({ card: { animMode: 'fade' } });
+  assert.match(fade, /@keyframes hsPkgIn\{from\{opacity:0;\}to\{/);
+
+  const none = cssWith({ card: { animMode: 'none' } });
+  assert.match(none, /\.packages-grid \.package-card\{animation:none;\}/);
+  assert.doesNotMatch(none, /hsPkgIn/);
+});
+
+test('el reveal no deja las tarjetas fuera de sitio ni mata el hover', () => {
+  const css = cssWith(null);
+  // Se neutraliza el reveal (opacidad 0 + 60px abajo)…
+  assert.match(css, /\.packages-grid \.package-card\.reveal\{opacity:1;transform:none;/);
+  // …pero la tarjeta sigue elevándose al pasar el mouse.
+  assert.match(css, /\.packages-grid \.package-card\.reveal:hover\{transform:translateY\(-8px\);\}/);
+});
+
+// La foto la pinta `renderers.js` (el HTML de la tarjeta), así que se prueba el
+// marcado real y el arreglo de las tarjetas YA pintadas cuando el diseño llega
+// después (que es como funcionan los tableros: no esperan a la API).
+
+/** DOM mínimo (tarjeta falsa) para probar el arreglo sin navegador. */
+function fakeCard(photo) {
+  const card = {
+    dataset: { hsPhoto: photo },
+    hijos: [],
+    querySelector: (sel) =>
+      card.hijos.find((h) =>
+        sel.split(',').some((s) => s.trim() === `.${h.clase}`)
+      ) || null,
+    insertAdjacentHTML: (_, html) => {
+      const clase = html.includes('pkg-photo-bg') ? 'pkg-photo-bg' : 'pkg-photo';
+      if (card.hijos.some((h) => h.clase === clase)) {
+        throw new Error('foto duplicada: el arreglo no es idempotente');
+      }
+      card.hijos.push({
+        clase,
+        html,
+        classList: { contains: (c) => c === clase },
+        remove: () => {
+          card.hijos = card.hijos.filter((h) => h.clase !== clase);
+        },
+      });
+    },
+  };
+  Object.defineProperty(card, 'foto', {
+    get: () => (card.hijos.length ? card.hijos[0].clase : 'none'),
+  });
+  return card;
+}
+
+test('la tarjeta pinta la foto donde manda el diseño', () => {
+  const r = loadScript('gallery/assets/renderers.js');
+  const pkg = { id: 1, urlImage: 'images/banner.jpg', services: [], tier: { key: 'premium' },
+    tierLabel: 'Premium', categoryKey: 'boda', packageCategory: { name: 'Bodas' }, categoryIcon: '📷',
+    priceFormatted: '$1', currency: 'MXN', name: 'X', subtitle: '' };
+
+  // Sin diseño no hay foto (pero la tarjeta recuerda su imagen para después).
+  r.window.HS_SITE_DESIGN = null;
+  const sin = r.renderPackageCard(pkg);
+  assert.doesNotMatch(sin, /pkg-photo/);
+  assert.match(sin, /data-hs-photo="images\/banner\.jpg"/);
+
+  r.window.HS_SITE_DESIGN = { card: { imageMode: 'top' } };
+  assert.match(r.renderPackageCard(pkg), /<img class="pkg-photo" src="images\/banner\.jpg"/);
+
+  r.window.HS_SITE_DESIGN = { card: { imageMode: 'bg' } };
+  assert.match(r.renderPackageCard(pkg), /class="pkg-photo-bg" style="background-image:url\('images\/banner\.jpg'\)"/);
+
+  r.window.HS_SITE_DESIGN = { card: { imageMode: 'rarisimo' } };
+  assert.doesNotMatch(r.renderPackageCard(pkg), /pkg-photo/);
+});
+
+test('la foto de las tarjetas ya pintadas se corrige cuando el diseño llega tarde', () => {
+  const r = loadScript('gallery/assets/renderers.js');
+  const cards = [fakeCard('images/a.jpg'), fakeCard('images/b.jpg')];
+  const root = { querySelectorAll: () => cards };
+
+  // Las tarjetas se pintaron sin diseño: no hay foto.
+  r.window.HS_SITE_DESIGN = null;
+  r.refreshPackagePhotos(root);
+  assert.equal(cards[0].foto, 'none');
+
+  // Llega el diseño con banda: la foto aparece en las que ya estaban.
+  r.window.HS_SITE_DESIGN = { card: { imageMode: 'top' } };
+  r.refreshPackagePhotos(root);
+  assert.equal(cards[0].foto, 'pkg-photo');
+  assert.match(cards[0].hijos[0].html, /src="images\/a\.jpg"/);
+
+  // Idempotente: repetirla no duplica ni vuelve a pedir la foto.
+  r.refreshPackagePhotos(root);
+  assert.equal(cards[0].hijos.length, 1);
+
+  // Cambiar a fondo REEMPLAZA la foto, no la suma.
+  r.window.HS_SITE_DESIGN = { card: { imageMode: 'bg' } };
+  r.refreshPackagePhotos(root);
+  assert.equal(cards[1].foto, 'pkg-photo-bg');
+  assert.equal(cards[1].hijos.length, 1);
+
+  // Y volver a "sin foto" la quita.
+  r.window.HS_SITE_DESIGN = { card: { imageMode: 'none' } };
+  r.refreshPackagePhotos(root);
+  assert.equal(cards[1].foto, 'none');
+  assert.equal(cards[1].hijos.length, 0);
+});
+
+test('el filtro por categoría reanima con el MISMO diseño', () => {
+  const view = loadScript('gallery/assets/site.js');
+  view.window.HS_SITE_DESIGN = view.window.HSSite.merge(
+    view.window.HSSite.defaults,
+    { card: { animMode: 'fade', animMs: 400, animStagger: 50 } }
+  );
+  const anim = view.window.HSSite.cardAnim(3);
+  assert.equal(anim.animation, 'hsPkgIn 400ms cubic-bezier(.4,0,.2,1) backwards');
+  assert.equal(anim.delay, '100ms');
+  // Sin animación, devuelve "none" (la tarjeta aparece y ya).
+  view.window.HS_SITE_DESIGN = { card: { animMode: 'none' } };
+  assert.equal(view.window.HSSite.cardAnim(1).animation, 'none');
 });
 
 // ------------------------------------------------------------------

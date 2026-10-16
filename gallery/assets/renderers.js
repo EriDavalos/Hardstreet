@@ -33,6 +33,63 @@ function designCtaLabel() {
   return designCard().ctaLabel || 'Cotizar';
 }
 
+/**
+ * FOTO del paquete dentro de su tarjeta, si el diseño la pide.
+ *
+ *   'top' → banda arriba (el alto lo fija el CSS con `imageHeight`)
+ *   'bg'  → de fondo, oscurecida por el CSS (`imageFade`)
+ *
+ * La foto es la del paquete (`url_image`) y, si no tiene, una del pool: es la
+ * misma que ya usan los carruseles, así que no hay otra fuente que mantener.
+ */
+function designImageMode() {
+  const mode = String(designCard().imageMode || 'none');
+  return mode === 'top' || mode === 'bg' ? mode : 'none';
+}
+
+/** La foto de un paquete, ya lista para meter en la tarjeta. */
+function packagePhotoUrl(pkg) {
+  return String(imageForPackage(pkg) || '').replace(/"/g, '&quot;');
+}
+
+/** HTML de la foto del paquete según dónde la ponga el diseño. */
+function packagePhotoHtml(mode, url) {
+  if (!url || (mode !== 'top' && mode !== 'bg')) return '';
+  return mode === 'top'
+    ? `<img class="pkg-photo" src="${url}" alt="" loading="lazy">`
+    : `<div class="pkg-photo-bg" style="background-image:url('${url}')" aria-hidden="true"></div>`;
+}
+
+function designCardPhoto(pkg) {
+  return packagePhotoHtml(designImageMode(), packagePhotoUrl(pkg));
+}
+
+/**
+ * Pone —o quita— la foto de las tarjetas YA PINTADAS.
+ *
+ * El diseño lo aplica `site.js` cuando responde la API y las tarjetas se pintan
+ * cuando responde la suya: si la tarjeta se pintó antes de saber el diseño, se
+ * corrige aquí (igual que los textos del precio). Es IDEMPOTENTE: repetirla no
+ * duplica la foto ni la vuelve a pedir si ya está la correcta.
+ *
+ * La foto se recuerda en la tarjeta (`data-hs-photo`), así que no hace falta
+ * volver a tener el paquete delante.
+ */
+function refreshPackagePhotos(root) {
+  const mode = designImageMode();
+  (root || document).querySelectorAll('.package-card').forEach((card) => {
+    const html = packagePhotoHtml(mode, card.dataset.hsPhoto || '');
+    const current = card.querySelector('.pkg-photo, .pkg-photo-bg');
+    const want = html.includes('pkg-photo-bg') ? 'bg' : html ? 'top' : 'none';
+    const has = current
+      ? (current.classList.contains('pkg-photo') ? 'top' : 'bg')
+      : 'none';
+    if (want === has) return; // ya está como el diseño pide
+    if (current) current.remove();
+    if (html) card.insertAdjacentHTML('afterbegin', html);
+  });
+}
+
 // ========== CARD DE PAQUETE (landing) ==========
 function renderPackageCard(pkg) {
   const serviciosHTML = pkg.services.map(s =>
@@ -43,7 +100,8 @@ function renderPackageCard(pkg) {
   ).join('');
 
   return `
-    <div class="package-card tier-${pkg.tier.key} cat-${pkg.categoryKey} reveal" data-category="${pkg.categoryKey}">
+    <div class="package-card tier-${pkg.tier.key} cat-${pkg.categoryKey} reveal" data-category="${pkg.categoryKey}" data-hs-photo="${packagePhotoUrl(pkg)}">
+      ${designCardPhoto(pkg)}
       <div class="pkg-tier-badge tier-${pkg.tier.key}">${pkg.tierLabel}</div>
       <div class="pkg-flyer-inner">
         <div class="pkg-category">
@@ -84,7 +142,8 @@ function renderPackageCardDashboard(pkg, showServices = true) {
     : '';
 
   return `
-    <div class="package-card tier-${pkg.tier.key} cat-${pkg.categoryKey}" data-category="${pkg.categoryKey}">
+    <div class="package-card tier-${pkg.tier.key} cat-${pkg.categoryKey}" data-category="${pkg.categoryKey}" data-hs-photo="${packagePhotoUrl(pkg)}">
+      ${designCardPhoto(pkg)}
       <div class="pkg-tier-badge tier-${pkg.tier.key}">${pkg.tierLabel}</div>
       <div class="pkg-flyer-inner">
         <div class="pkg-category">
