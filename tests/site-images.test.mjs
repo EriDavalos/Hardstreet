@@ -92,47 +92,57 @@ function loadScript(relativePath) {
 
 const HSSite = loadScript('gallery/assets/site.js').window.HSSite;
 
-const DRIVE = 'http://drive.test.com/files/XV/ReynaCoot.jpg';
+const DRIVE = 'https://oriongo.ddns.net/files/XV/ReynaCoot.jpg';
 const PROPIEDAD_SITIO = 'images/banner.jpg';
+// Un enlace de OTRO sitio, aunque use una ruta `/files/`: no es el Drive, así
+// que se usa TAL CUAL (antes se le cambiaba la ruta por una miniatura que no
+// existe y la foto salía rota).
+const OTRO_SITIO = 'https://otro.com/files/foto.jpg';
 
 // ------------------------------------------------------------------
 // 1. ¿Qué foto se parte en dos?
 // ------------------------------------------------------------------
 
-test('sólo las fotos del Drive tienen miniatura', () => {
+test('sólo las fotos del Drive INTERNO tienen miniatura', () => {
   // Del Drive: sí (el servidor sabe hacerla).
   assert.equal(HSSite.isDriveImage(DRIVE), true);
-  assert.equal(HSSite.isDriveImage('https://x/files/a/b.jpg'), true);
-  // Del propio sitio, o una URL de fuera: no hay miniatura que pedir.
+  assert.equal(HSSite.isDriveImage('https://oriongo.ddns.net:4000/files/a/b.jpg'), true);
+  // La red de casa (localhost o IP privada) también es el Drive.
+  assert.equal(HSSite.isDriveImage('http://localhost:4000/files/a/b.jpg'), true);
+  assert.equal(HSSite.isDriveImage('http://192.168.1.70:4000/files/a/b.jpg'), true);
+  // Del propio sitio, o una URL de fuera: no hay miniatura que pedir. Una URL
+  // de otro sitio se usa TAL CUAL, aunque su ruta lleve `/files/`.
   assert.equal(HSSite.isDriveImage(PROPIEDAD_SITIO), false);
   assert.equal(HSSite.isDriveImage('https://otro.com/foto.jpg'), false);
+  assert.equal(HSSite.isDriveImage(OTRO_SITIO), false);
   assert.equal(HSSite.isDriveImage(''), false);
 });
 
 test('la miniatura es la MISMA foto, en el mismo servidor y a su tamaño', () => {
   assert.equal(
     HSSite.thumbnail(DRIVE),
-    'http://drive.test.com/thumb/XV/ReynaCoot.jpg?w=320'
+    'https://oriongo.ddns.net/thumb/XV/ReynaCoot.jpg?w=320'
   );
   // El ancho se respeta (redondeado) y queda dentro de lo razonable.
   assert.equal(
     HSSite.thumbnail(DRIVE, 1280),
-    'http://drive.test.com/thumb/XV/ReynaCoot.jpg?w=1280'
+    'https://oriongo.ddns.net/thumb/XV/ReynaCoot.jpg?w=1280'
   );
   assert.equal(
     HSSite.thumbnail(DRIVE, 100.4),
-    'http://drive.test.com/thumb/XV/ReynaCoot.jpg?w=100'
+    'https://oriongo.ddns.net/thumb/XV/ReynaCoot.jpg?w=100'
   );
   // Un ancho absurdo no se cuela tal cual en la URL.
   assert.match(HSSite.thumbnail(DRIVE, 99999), /w=2048$/);
   assert.match(HSSite.thumbnail(DRIVE, 0), /w=320$/);
-  // Una foto que no es del Drive no tiene miniatura (null).
+  // Una foto que no es del Drive no tiene miniatura (null): se usa su enlace.
   assert.equal(HSSite.thumbnail(PROPIEDAD_SITIO), null);
+  assert.equal(HSSite.thumbnail(OTRO_SITIO), null);
   assert.equal(HSSite.thumbnail(''), null);
   // El token de la sesión (query) no viaja a la URL de la miniatura.
   assert.equal(
-    HSSite.thumbnail('http://drive.test.com/files/a/b.jpg?apikey=SECRETO', 320),
-    'http://drive.test.com/thumb/a/b.jpg?w=320'
+    HSSite.thumbnail('https://oriongo.ddns.net/files/a/b.jpg?apikey=SECRETO', 320),
+    'https://oriongo.ddns.net/thumb/a/b.jpg?w=320'
   );
 });
 
@@ -142,10 +152,18 @@ test('la miniatura es la MISMA foto, en el mismo servidor y a su tamaño', () =>
 
 test('una foto del Drive sale con su miniatura y el dato de la original', () => {
   const tag = HSSite.galleryImg(DRIVE, 'XV Años');
-  assert.match(tag, /src="http:\/\/drive\.test\.com\/thumb\/XV\/ReynaCoot\.jpg\?w=320"/);
-  assert.match(tag, /data-hs-full="http:\/\/drive\.test\.com\/files\/XV\/ReynaCoot\.jpg"/);
+  assert.match(tag, /src="https:\/\/oriongo\.ddns\.net\/thumb\/XV\/ReynaCoot\.jpg\?w=320"/);
+  assert.match(tag, /data-hs-full="https:\/\/oriongo\.ddns\.net\/files\/XV\/ReynaCoot\.jpg"/);
   assert.match(tag, /class="hs-img-low"/);
   assert.match(tag, /alt="XV Años"/);
+});
+
+test('una foto de OTRO sitio se pide tal cual (con su enlace real)', () => {
+  const tag = HSSite.galleryImg(OTRO_SITIO, 'Boda');
+  assert.match(tag, /src="https:\/\/otro\.com\/files\/foto\.jpg"/);
+  assert.doesNotMatch(tag, /thumb/);
+  assert.doesNotMatch(tag, /data-hs-full/);
+  assert.doesNotMatch(tag, /hs-img-low/);
 });
 
 test('una foto del propio sitio se pide como siempre (sin miniatura)', () => {
@@ -171,7 +189,7 @@ test('la galería de la página arma las fotos del Drive en dos tiempos', () => 
   const grid = HSSite.galleryHtml(plan);
   assert.match(grid, /data-category="xv-anos"/);
   assert.match(grid, /thumb\/XV\/ReynaCoot\.jpg\?w=320/);
-  assert.match(grid, /data-hs-full="http:\/\/drive\.test\.com\/files\/XV\/ReynaCoot\.jpg"/);
+  assert.match(grid, /data-hs-full="https:\/\/oriongo\.ddns\.net\/files\/XV\/ReynaCoot\.jpg"/);
 });
 
 // ------------------------------------------------------------------
@@ -186,7 +204,7 @@ test('la imagen arranca con la miniatura borrosa y cambia a la original', () => 
   // Primero la MINIATURA (la que se ve borrosa: la pista de "mejorando") y
   // después la original.
   assert.deepEqual(el.srcs(), [
-    'http://drive.test.com/thumb/XV/ReynaCoot.jpg?w=640',
+    'https://oriongo.ddns.net/thumb/XV/ReynaCoot.jpg?w=640',
     DRIVE,
   ]);
   // Ya bajó la original: se cambia y el desenfoque se va.
@@ -207,7 +225,7 @@ test('un fondo (portada, divisor) también va de miniatura a original', () => {
 
   assert.equal(twoStep, true);
   // El fondo pide una miniatura más ancha (se ve a pantalla completa)...
-  assert.equal(log[0], 'url("http://drive.test.com/thumb/XV/ReynaCoot.jpg?w=1280")');
+  assert.equal(log[0], 'url("https://oriongo.ddns.net/thumb/XV/ReynaCoot.jpg?w=1280")');
   // ...y luego la original.
   assert.equal(log[log.length - 1], `url("${DRIVE}")`);
 });

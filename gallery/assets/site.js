@@ -134,25 +134,81 @@ function hsCategoryKey(name) {
 // imágenes propias del sitio (`images/…`) no tienen miniatura y se cargan como
 // siempre.
 
-/** Ancho de la miniatura para una foto de la galería. */
+/**
+ * Ancho de la miniatura para una foto de la galería.
+ */
 const HS_THUMB_WIDTH = 320;
 
 /** Ancho de la miniatura de un FONDO (se ve a pantalla completa). */
 const HS_THUMB_WIDTH_BG = 1280;
 
-/** ¿Es una URL de una foto del Drive? (`<servidor>/files/<ruta>`). */
-function hsIsDriveImage(url) {
-  return String(url == null ? '' : url).indexOf('/files/') !== -1;
+/**
+ * Host(s) del servidor del Drive: el ÚNICO que sabe hacer miniaturas
+ * (`/thumb/...`). Se puede ampliar al desplegar con
+ * `window.HS_DRIVE_HOSTS = ['mi-drive.ddns.net']`.
+ */
+const HS_DRIVE_HOSTS = ['oriongo.ddns.net'];
+
+/** Hosts "de casa" (localhost o IP privada): también son el Drive interno. */
+function hsIsLocalHost(host) {
+  const h = String(host || '').toLowerCase();
+  if (!h) return false;
+  if (h === 'localhost' || h === '127.0.0.1' || h === '::1' || h === '[::1]') return true;
+  if (h.endsWith('.local') || h.endsWith('.lan')) return true;
+  const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(h);
+  if (!m) return false;
+  const [a, b] = [Number(m[1]), Number(m[2])];
+  if (a === 10) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  return false;
+}
+
+/** Host de una URL absoluta ('' si es relativa). */
+function hsHostOf(url) {
+  const m = /^[a-z][a-z0-9+.\-]*:\/\/([^/?#]+)/i.exec(String(url || '').trim());
+  if (!m) return '';
+  return m[1]
+    .replace(/^[^@]*@/, '') // sin usuario:contraseña
+    .replace(/^\[/, '')
+    .replace(/\]$/, '')
+    .replace(/:\d+$/, '') // sin puerto
+    .toLowerCase();
+}
+
+/** Hosts del Drive configurados (los de fábrica + los del despliegue). */
+function hsDriveHosts() {
+  const extra =
+    typeof window !== 'undefined' && Array.isArray(window.HS_DRIVE_HOSTS)
+      ? window.HS_DRIVE_HOSTS
+      : [];
+  return [...HS_DRIVE_HOSTS, ...extra].map((h) => String(h || '').toLowerCase());
 }
 
 /**
- * URL de la MINIATURA de una foto del Drive (null si no es del Drive).
+ * ¿Es una URL de una foto del Drive INTERNO? (`https://oriongo.ddns.net/files/...`)
+ *
+ * Ojo: NO basta con que la URL lleve `/files/` dentro. Cualquier otro enlace
+ * (una foto de otro sitio, un servicio que también use `/files/`) se deja TAL
+ * CUAL: antes se le cambiaba la ruta por `/thumb/...?w=` y la foto salía rota.
+ */
+function hsIsDriveImage(url) {
+  const clean = String(url == null ? '' : url).trim();
+  if (clean.indexOf('/files/') === -1) return false;
+  const host = hsHostOf(clean);
+  if (!host) return false; // ruta relativa del propio sitio: no hay miniatura
+  if (hsDriveHosts().indexOf(host) !== -1) return true;
+  return hsIsLocalHost(host);
+}
+
+/**
+ * URL de la MINIATURA de una foto del Drive (null si no es del Drive interno).
  * Puro: mismo URL → misma miniatura, se puede probar sin navegador.
  */
 function hsThumbUrl(url, width) {
   const clean = String(url == null ? '' : url).trim();
+  if (!hsIsDriveImage(clean)) return null;
   const cut = clean.indexOf('/files/');
-  if (cut === -1) return null;
   const base = clean.slice(0, cut);
   // Sin query ni hash (ni `/files/` del final): la miniatura se pide por RUTA.
   const path = clean.slice(cut + '/files/'.length).split(/[?#]/)[0];
@@ -870,7 +926,16 @@ function loadSiteConfig() {
     let design = null;
     let landing = null;
     try {
-      const res = await fetch(base + '/api/site', { headers: { Accept: 'application/json' } });
+      // El contenido lo guarda el panel y tiene que verse AL RECARGAR: sin
+      // esperar a que caduque la copia guardada.
+      //   * `cache:'no-store'` → el navegador no reusa la respuesta que guardó.
+      //   * `?t=<ms>` → cada carga es una URL distinta para el caché del borde
+      //     (el CDN del backend), que si no puede servir por minutos lo de
+      //     antes de guardar y parece que el panel no hubiera guardado nada.
+      const res = await fetch(`${base}/api/site?t=${Date.now()}`, {
+        headers: { Accept: 'application/json' },
+        cache: 'no-store',
+      });
       if (res.ok) {
         const data = await res.json();
         design = data.design || null;
