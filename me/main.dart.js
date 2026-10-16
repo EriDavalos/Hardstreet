@@ -32625,7 +32625,7 @@ if(s)return null
 r=o.gabN().h(0,"path")
 if(r!=null&&r.length!==0){s=t.Hd
 s=A.M(new A.ac(A.a(r.split("/"),t.s),new A.aHa(),s),s.i("x.E"))
-return s}q=A.b8W("http://oriongo.ddns.net:4000")
+return s}q=A.b8W("https://oriongo.ddns.net")
 if(q!=null&&o.gmK()===q.gmK()&&o.gtP()===q.gtP()&&o.gtM().length!==0){s=o.gtM()
 p=A.a2(s).i("ac<1>")
 s=A.M(new A.ac(s,new A.aHb(),p),p.i("x.E"))
@@ -113436,7 +113436,7 @@ s.toString
 r.z=A.aiW(s)}},
 B(a){var s,r,q,p=this,o=null,n=p.z
 if(n==null){s=p.at
-if(s==null){s=new A.nL("http://oriongo.ddns.net:4000",A.a([],t.s),B.fm,B.M,A.y(t.N,t.Ih),B.om,B.l2,A.a([],t.tj),A.a([],t.Z6),new A.bT(A.kk(0,0,!1),0,!1),$.ab())
+if(s==null){s=new A.nL("https://oriongo.ddns.net",A.a([],t.s),B.fm,B.M,A.y(t.N,t.Ih),B.om,B.l2,A.a([],t.tj),A.a([],t.Z6),new A.bT(A.kk(0,0,!1),0,!1),$.ab())
 s.dD()
 p.at=s
 n=s}else n=s}s=A.bbH(A.b7_(B.b9,o,o,B.Q,o).a7R(B.Q)).a81(B.m,B.Oy,B.nR,B.IE)
@@ -113565,7 +113565,7 @@ A.aat.prototype={
 B(a){var s,r=null,q=A.m(a).ax,p=A.a4(B.bQ,q.fy,r,72),o=A.m(a).ok.f
 o=A.f("No hay conexi\xf3n con el servidor",r,r,r,r,r,o==null?r:o.f6(B.p),B.ar,r,r)
 s=q.rx
-return A.awK(r,A.ck(new A.S(B.vD,A.Q(A.a([p,B.cr,o,B.aq,A.f("No se pudo verificar la versi\xf3n de la aplicaci\xf3n (http://oriongo.ddns.net:4000). Revisa tu conexi\xf3n e int\xe9ntalo de nuevo.",r,r,r,r,r,A.C(r,r,s==null?q.k3:s,r,r,r,r,r,r,r,r,r,r,r,r,r,r,!0,r,r,r,r,r,r,r,r),B.ar,r,r),B.re,A.i7(B.VN,B.bU,this.c,r)],t.p),B.i,B.e,B.L,0,B.k),r),r,r))}}
+return A.awK(r,A.ck(new A.S(B.vD,A.Q(A.a([p,B.cr,o,B.aq,A.f("No se pudo verificar la versi\xf3n de la aplicaci\xf3n (https://oriongo.ddns.net). Revisa tu conexi\xf3n e int\xe9ntalo de nuevo.",r,r,r,r,r,A.C(r,r,s==null?q.k3:s,r,r,r,r,r,r,r,r,r,r,r,r,r,r,!0,r,r,r,r,r,r,r,r),B.ar,r,r),B.re,A.i7(B.VN,B.bU,this.c,r)],t.p),B.i,B.e,B.L,0,B.k),r),r,r))}}
 A.em.prototype={
 N(){return"_Section."+this.b}}
 A.DD.prototype={
@@ -123736,7 +123736,7 @@ case 3:if(!j.v()){s=4
 break}n=j.d
 if(n==null)n=i.a(n)
 l=new A.le(A.a([],o))
-l=new A.H1("http://oriongo.ddns.net:4000",l)
+l=new A.H1("https://oriongo.ddns.net",l)
 h=m
 g=n
 s=5
@@ -123754,7 +123754,7 @@ if(s==null){s=A.aP(a.h(0,"id"))
 s=s==null?null:B.d.ap(s)}return s==null?0:s},
 gF9(){A.acp()
 var s=new A.le(A.a([],t.W))
-s=new A.H1("http://oriongo.ddns.net:4000",s)
+s=new A.H1("https://oriongo.ddns.net",s)
 return s},
 gaCp(){var s,r,q,p,o,n,m,l,k,j,i,h,g,f="owners",e=A.a([],t.e)
 for(s=J.bc(this.r),r=t.f,q=t.N,p=t.z,o=t.g,n=t.j,m=t.P;s.v();){l=s.gO()
@@ -124244,7 +124244,7 @@ B.b.E(p,A.a([new A.Nx(j,c,new A.aZ8(d,j),c,c),B.aq],r))}p.push(B.bd)
 B.b.E(q,p)}if(m.length!==0){p=A.a([d.a4e(a,"IM\xc1GENES",B.fi),B.aq],r)
 for(l=m.length,i=t.N,h=t.W,k=0;k<m.length;m.length===l||(0,A.z)(m),++k){j=m[k]
 g=new A.le(A.a([],h))
-g=new A.H1("http://oriongo.ddns.net:4000",g)
+g=new A.H1("https://oriongo.ddns.net",g)
 f=A.aP(d.as.h(0,"shareId"))
 f=f==null?c:B.d.ap(f)
 if(f==null)f=0
