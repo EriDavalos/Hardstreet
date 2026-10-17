@@ -142,11 +142,9 @@ function renderPackageCard(pkg) {
           <div class="pkg-price">
             <span class="pkg-price-label">${designPriceLabel()}</span>
             <span class="pkg-price-value">${pkg.priceFormatted}</span>
-            <span class="pkg-price-note">${pkg.currency}</span>
           </div>
           <a href="#contact" class="pkg-cta">
             <span>${designCtaLabel()}</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
         </div>
       </div>

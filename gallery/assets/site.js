@@ -45,8 +45,11 @@ const SITE_DESIGN_DEFAULT = {
     imageHeight: 150,
     imageFade: 0.7,
     imageFadeColor: '#000000',
-    // De dónde viene el velo: 'bottom' (tapa más abajo) o 'top'.
+    // De dónde viene el velo: 'bottom' (tapa más abajo), 'top' o cualquiera
+    // de las 8 direcciones de la rosa; -1 = seguir esa dirección.
     imageFadeFrom: 'bottom',
+    // Ángulo LIBRE del velo (0..359°): -1 = usar `imageFadeFrom`.
+    imageFadeAngle: -1,
     // Entrada de las tarjetas del catálogo: 'up' | 'fade' | 'zoom' | 'none'.
     animMode: 'up',
     animMs: 600,
@@ -145,16 +148,59 @@ function hsPhotoFadeColor(v) {
  * nombre, los servicios y el precio— y menos del otro. Es el mismo velo del
  * panel (`hsPhotoFadeGradients`), así el texto resalta igual en los dos lados.
  *
- * Los dos degradados van en la MISMA capa para que la foto quede debajo: uno
- * vertical (de arriba abajo o de abajo arriba) y otro de izquierda a derecha.
+ * [from] acepta las 8 direcciones de la rosa (bottom, top, left, right y las
+ * cuatro esquinas). [angle] (0..359) es el AJUSTE FINO del panel: si viene un
+ * ángulo válido, manda sobre la dirección.
+ *
+ * Los dos degradados van en la MISMA capa para que la foto quede debajo: el
+ * principal va hacia el lado que TAPA y el secundario, perpendicular, tapa el
+ * flanco (como en el panel).
  */
-function hsPhotoFade(dark, amount, from) {
+
+/** Ángulo CSS de cada dirección del velo (lado nombrado = el que tapa más). */
+const HS_FADE_DEG = {
+  top: 0,
+  topRight: 45,
+  right: 90,
+  bottomRight: 135,
+  bottom: 180,
+  bottomLeft: 225,
+  left: 270,
+  topLeft: 315,
+};
+
+/** Ángulo de la capa PERPENDICULAR (tapón del flanco) por dirección. */
+const HS_FADE_SIDE_DEG = {
+  top: 95,
+  bottom: 95,
+  left: 5,
+  right: 5,
+  topLeft: 45,
+  topRight: 135,
+  bottomLeft: 315,
+  bottomRight: 225,
+};
+
+/** `imageFadeAngle` del diseño: -1 (o basura) = sin ángulo libre. */
+function hsPhotoFadeAngle(v) {
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? ((n % 360) + 360) % 360 : -1;
+}
+
+function hsPhotoFade(dark, amount, from, angle) {
   const f = Math.round(Math.max(0, Math.min(1, amount)) * 100) / 100;
   const a = (x) => hsAlpha(dark, Math.round(Math.max(0, Math.min(1, x)) * 100) / 100);
-  const deg = String(from) === 'top' ? '0deg' : '180deg';
+  const free = hsPhotoFadeAngle(angle);
+  const key = String(from);
+  const deg = free >= 0 ? free : (HS_FADE_DEG[key] === undefined ? 180 : HS_FADE_DEG[key]);
+  // La capa secundaria gira junto con el ángulo libre (misma rotación que
+  // aplica el panel con `GradientRotation`).
+  const side = free >= 0
+    ? ((free - 85) % 360 + 360) % 360
+    : (HS_FADE_SIDE_DEG[key] === undefined ? 95 : HS_FADE_SIDE_DEG[key]);
   return (
-    `linear-gradient(${deg},${a(f * .15)} 0%,${a(f * .6)} 50%,${a(f)} 100%),` +
-      `linear-gradient(95deg,${a(f * .55)} 0%,${a(f * .22)} 55%,${a(0)} 100%)`
+    `linear-gradient(${deg}deg,${a(f * .15)} 0%,${a(f * .6)} 50%,${a(f)} 100%),` +
+      `linear-gradient(${side}deg,${a(f * .55)} 0%,${a(f * .22)} 55%,${a(0)} 100%)`
   );
 }
 
@@ -531,10 +577,6 @@ function siteDesignCss(rawDesign) {
 
   // FOTO del paquete. La foto la pinta `renderers.js` (de los paquetes de la
   // web); aquí solo se decide DÓNDE va y cuánto se ve.
-  //
-  // Las reglas del VELO van al final (ver [later]): el color del pie de la
-  // tarjeta lo fijan los tiers, y esto tiene que ir DESPUÉS para mandar.
-  const later = [];
   const imageMode = String(c.imageMode || 'none');
   if (imageMode === 'top') {
     const h = Math.max(0, Number(c.imageHeight) || 0);
@@ -553,30 +595,24 @@ function siteDesignCss(rawDesign) {
         `background:${hsPhotoFade(
           hsPhotoFadeColor(c.imageFadeColor),
           hsPhotoFadeAmount(c.imageFade),
-          c.imageFadeFrom
+          c.imageFadeFrom,
+          c.imageFadeAngle
         )};}`
     );
-    // Con la foto de fondo, el contenido sube de capa para seguir leyéndose y
-    // el pie se apoya en un poco más del color del velo (en el panel también).
+    // Con la foto de fondo, el contenido sube de capa para seguir leyéndose.
     r.push('.package-card>.pkg-flyer-inner{position:relative;z-index:1;}');
-    later.push(
-      `.pkg-footer{background:${hsAlpha(
-        hsPhotoFadeColor(c.imageFadeColor),
-        0.34
-      )};}`
-    );
   }
 
-  // Forma, densidad y comportamiento. El relleno y el pie son los MISMOS
-  // números que usa la tarjeta del panel (`WebPackageCard`): contenido con
-  // [pad] a los lados, pie a sangre completa.
+  // Forma, densidad y comportamiento. El relleno del pie es el MISMO que usa
+  // la tarjeta del panel (`WebPackageCard`) y el del diseñador: el precio y el
+  // botón van dentro del relleno, SIN banda ni borde que los separe.
   const pad = Math.max(0, Number(c.padding) || 0);
   r.push(`.package-card{border-radius:${Number(c.radius) || 0}px;}`);
   r.push(
     '.packages-grid>.package-card{width:100%;max-width:450px;justify-self:center;}'
   );
   r.push(`.pkg-flyer-inner{padding:14px ${pad}px 0;}`);
-  r.push(`.pkg-footer{margin:0 -${pad}px;padding:12px 20px;}`);
+  r.push(`.pkg-footer{padding:14px 0 ${pad}px;}`);
   r.push(`.pkg-name{font-family:${c.serifNames ? `'Playfair Display',serif` : `'Inter',sans-serif`};` +
     `text-transform:${c.uppercaseNames ? 'uppercase' : 'none'};` +
     `letter-spacing:${c.uppercaseNames ? '.06em' : '0'};}`);
@@ -644,8 +680,6 @@ function siteDesignCss(rawDesign) {
     r.push(`${k} .pkg-price-value,${k} .pkg-category-name{color:${hsEsc(t.accent)};}`);
     r.push(`${k} .pkg-icon-svg{color:${hsEsc(t.accent)};}`);
     r.push(`${k} .pkg-subtitle,${k} .pkg-description{color:${hsAlpha('#ffffff', 0.55)};}`);
-    // El pie lleva un tinte del acento del tier (como el del panel).
-    r.push(`${k} .pkg-footer{background:${hsAlpha(t.accent, 0.05)};}`);
     // El CTA es la misma pastilla del panel: relleno con el tinte del acento,
     // texto en el acento y sin MAYÚSCULAS ni borde.
     r.push(
@@ -661,8 +695,6 @@ function siteDesignCss(rawDesign) {
           `color:${hsEsc(t.accentSoft)};border-color:${hsAlpha(t.accent, 0.35)};box-shadow:none;}`
     );
   }
-  // Las reglas que tienen que ganarle a las de los tiers (el pie sobre foto).
-  r.push(...later);
   return r.join('\n');
 }
 

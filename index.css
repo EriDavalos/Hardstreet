@@ -1245,15 +1245,16 @@ section[id] { scroll-margin-top: 84px; }
   flex: 1;
   line-height: 1.4;
 }
-/* El pie va a SANGRE completa (sin el relleno del contenido): los márgenes
-   laterales e inferiores los emite `site.js` con el relleno del diseño. */
+/* El pie vive DENTRO del relleno de la tarjeta: sin banda ni borde que lo
+   separe del contenido (así lo pinta el diseñador). Los números salen del
+   diseño guardado (`site.js`). */
 .pkg-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 12px 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 14px 0 32px;
+  border-top: 0;
   background: transparent;
 }
 .pkg-price {
@@ -1862,7 +1863,7 @@ section[id] { scroll-margin-top: 84px; }
     flex-direction: column;
     align-items: stretch;
     gap: 1rem;
-    padding: 1.1rem 1.25rem;
+    padding: 14px 0 32px;
   }
   .pkg-price-value {
     font-size: 1.4rem;

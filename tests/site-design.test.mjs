@@ -53,10 +53,13 @@ test('sin diseño guardado se aplican los defaults (nada cambia)', () => {
   assert.match(css, /--gold-light:#F0D48A;/);
   assert.match(css, /grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(css, /\.package-card\{border-radius:18px;\}/);
-  // El contenido lleva el relleno del diseño a los lados y el pie va a sangre
-  // completa (los MISMOS números que la tarjeta del panel).
+  // El contenido lleva el relleno del diseño a los lados y el pie vive DENTRO
+  // de ese relleno, sin banda (los MISMOS números que la tarjeta del panel).
   assert.match(css, /\.pkg-flyer-inner\{padding:14px 32px 0;\}/);
-  assert.match(css, /\.pkg-footer\{margin:0 -32px;padding:12px 20px;\}/);
+  assert.match(css, /\.pkg-footer\{padding:14px 0 32px;\}/);
+  // El pie no es una banda aparte: ni fondo por tier ni borde arriba.
+  assert.doesNotMatch(css, /\.pkg-footer\{[^}]*background:/);
+  assert.doesNotMatch(css, /\.pkg-footer\{[^}]*border-top:/);
   // Ningún elemento del diseño arranca oculto.
   assert.doesNotMatch(css, /display:none/);
 });
@@ -95,7 +98,7 @@ test('el diseño de las tarjetas manda forma, densidad y textos', () => {
   assert.match(css, /\.packages-grid\{gap:12px;/);
   assert.match(css, /\.package-card\{border-radius:4px;\}/);
   assert.match(css, /\.pkg-flyer-inner\{padding:14px 10px 0;\}/);
-  assert.match(css, /\.pkg-footer\{margin:0 -10px;padding:12px 20px;\}/);
+  assert.match(css, /\.pkg-footer\{padding:14px 0 10px;\}/);
   assert.match(css, /\.pkg-name\{font-family:'Inter',sans-serif;/);
   assert.match(css, /text-transform:uppercase;/);
   assert.match(css, /\.package-card::before\{display:none !important;\}/);
@@ -180,14 +183,9 @@ test('la foto de fondo se ve a todo color y la oscurece el velo NEGRO', () => {
   // Y NO cambia por tier: ya no hay un degradado propio de cada tarjeta.
   assert.doesNotMatch(css, /\.tier-\w+ \.pkg-photo-bg::after\{/);
   assert.doesNotMatch(css, /rgba\(11, 14, 23, 0\.8\) 100%\)/);
-  // Con la foto de fondo, el pie se apoya en un poco más del color del velo,
-  // y esa regla va DESPUÉS de la de los tiers (si no, el tier la pisaría).
-  assert.match(css, /\.pkg-footer\{background:rgba\(0, 0, 0, 0\.34\);\}/);
-  assert.ok(
-    css.lastIndexOf('.pkg-footer{background:rgba(0, 0, 0, 0.34);}') >
-      css.lastIndexOf('.package-card.tier-basic .pkg-footer'),
-    'el pie sobre foto tiene que mandar sobre el tinte del tier'
-  );
+  // El pie NO se oscurece aparte: sobre la foto es el mismo pie de siempre
+  // (el diseñador tampoco pinta una banda encima).
+  assert.doesNotMatch(css, /\.pkg-footer\{[^}]*background:/);
   assert.match(css, /\.package-card>\.pkg-flyer-inner\{position:relative;z-index:1;\}/);
 });
 
@@ -213,6 +211,49 @@ test('el degradado de la foto se puede personalizar (color y dirección)', () =>
   assert.match(raro, /rgba\(0, 0, 0, 0\.7\) 100%\)/);
 });
 
+test('el velo acepta las 8 direcciones de la rosa (y sus ángulos CSS)', () => {
+  const dir = (from, deg, side) => {
+    const css = cssWith({ card: { imageMode: 'bg', imageFadeFrom: from, imageFade: 1 } });
+    assert.match(
+      css,
+      new RegExp(`background:linear-gradient\\(${deg}deg,rgba\\(0, 0, 0, 0\\.15\\) 0%`),
+      `dirección ${from} debe pintar ${deg}deg`
+    );
+    // La capa perpendicular (tapón del flanco) va con su ángulo propio.
+    assert.match(css, new RegExp(`,linear-gradient\\(${side}deg,rgba\\(0, 0, 0, 0\\.55\\)`));
+  };
+  dir('bottom', 180, 95);
+  dir('top', 0, 95);
+  dir('left', 270, 5);
+  dir('right', 90, 5);
+  dir('topLeft', 315, 45);
+  dir('topRight', 45, 135);
+  dir('bottomLeft', 225, 315);
+  dir('bottomRight', 135, 225);
+});
+
+test('el ángulo libre del velo manda sobre la dirección', () => {
+  const css = cssWith({
+    card: { imageMode: 'bg', imageFadeAngle: 60, imageFadeFrom: 'bottom', imageFade: 1 },
+  });
+  assert.match(
+    css,
+    /background:linear-gradient\(60deg,rgba\(0, 0, 0, 0\.15\) 0%/
+  );
+  // La capa secundaria rota con él: 60 − 85 → 335deg.
+  assert.match(css, /,linear-gradient\(335deg,rgba\(0, 0, 0, 0\.55\)/);
+
+  // -1 o basura = sin ángulo libre: gobierna la dirección (180deg).
+  const sin = cssWith({
+    card: { imageMode: 'bg', imageFadeAngle: -1, imageFade: 1 },
+  });
+  assert.match(sin, /background:linear-gradient\(180deg,/);
+  const raro = cssWith({
+    card: { imageMode: 'bg', imageFadeAngle: 'nada', imageFade: 1 },
+  });
+  assert.match(raro, /background:linear-gradient\(180deg,/);
+});
+
 test('la tarjeta de la web se pinta como la del panel (mismas piezas y textos)', () => {
   const css = cssWith(null);
   // Nombre BLANCO en todos los tiers (el panel no usa degradados en el nombre).
@@ -220,8 +261,8 @@ test('la tarjeta de la web se pinta como la del panel (mismas piezas y textos)',
   assert.match(css, /\.package-card\.tier-gold \.pkg-name\{color:#fff;\}/);
   // La descripción del paquete va en la tarjeta, como en el panel.
   assert.match(css, /\.package-card\.tier-premium \.pkg-subtitle,\.package-card\.tier-premium \.pkg-description\{color:rgba\(255, 255, 255, 0\.55\);\}/);
-  // Y el pie lleva el tinte del acento de su tier.
-  assert.match(css, /\.package-card\.tier-basic \.pkg-footer\{background:rgba\(143, 176, 212, 0\.05\);\}/);
+  // Y el pie NO cambia por tier: es el mismo en todos (precio + pastilla).
+  assert.doesNotMatch(css, /\.tier-\w+ \.pkg-footer\{/);
 
   // El marcado: badge EN FLUJO dentro del contenido (no flotando encima de la
   // foto) y la descripción entre el subtítulo y la línea.
