@@ -175,8 +175,8 @@ panel DISEÑA y la web APLICA en vivo al cargar (`GET /api/site` →
     "priceLabel": "Desde", "ctaLabel": "Cotizar",
     // FOTO del paquete dentro de la tarjeta: 'none' (sin foto) | 'top' (banda
     // arriba, con `imageHeight`) | 'bg' (de FONDO: la foto se ve a todo color y
-    // encima lleva un degradado del color de la tarjeta —el de su tier— que
-    // manda `imageFade`: abajo y a la izquierda tapa más, así se lee el texto).
+    // encima lleva un velo NEGRO que manda `imageFade`: abajo y a la izquierda
+    // tapa más, así el texto resalta. El mismo velo lo pone el panel).
     "imageMode": "none", "imageHeight": 150, "imageFade": 0.7
   },
   "tiers": {

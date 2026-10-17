@@ -92,6 +92,11 @@ function refreshPackagePhotos(root) {
 }
 
 // ========== CARD DE PAQUETE (landing) ==========
+//
+// El orden de las piezas es el MISMO que el de la tarjeta del panel
+// (`WebPackageCard`): foto → badge del tier (EN FLUJO, arriba a la izquierda) →
+// categoría → nombre → subtítulo → descripción → línea → cuántos servicios →
+// lista → pie con precio y botón. Así las dos tarjetas son la misma tarjeta.
 function renderPackageCard(pkg) {
   const serviciosHTML = pkg.services.map(s =>
     `<li>
@@ -103,8 +108,8 @@ function renderPackageCard(pkg) {
   return `
     <div class="package-card tier-${pkg.tier.key} cat-${pkg.categoryKey} reveal" data-category="${pkg.categoryKey}" data-hs-photo="${packagePhotoUrl(pkg)}">
       ${designCardPhoto(pkg)}
-      <div class="pkg-tier-badge tier-${pkg.tier.key}">${pkg.tierLabel}</div>
       <div class="pkg-flyer-inner">
+        <div class="pkg-tier-badge tier-${pkg.tier.key}">${pkg.tierLabel}</div>
         <div class="pkg-category">
           <span class="pkg-category-icon">${pkg.categoryIcon}</span>
           <span class="pkg-category-name">${pkg.packageCategory.name}</span>
@@ -112,6 +117,7 @@ function renderPackageCard(pkg) {
         <div class="pkg-header">
           <h3 class="pkg-name">${pkg.name}</h3>
           <p class="pkg-subtitle">${pkg.subtitle}</p>
+          ${pkg.description ? `<p class="pkg-description">${pkg.description}</p>` : ''}
         </div>
         <div class="pkg-divider"></div>
         <div class="pkg-services-header">
@@ -145,8 +151,8 @@ function renderPackageCardDashboard(pkg, showServices = true) {
   return `
     <div class="package-card tier-${pkg.tier.key} cat-${pkg.categoryKey}" data-category="${pkg.categoryKey}" data-hs-photo="${packagePhotoUrl(pkg)}">
       ${designCardPhoto(pkg)}
-      <div class="pkg-tier-badge tier-${pkg.tier.key}">${pkg.tierLabel}</div>
       <div class="pkg-flyer-inner">
+        <div class="pkg-tier-badge tier-${pkg.tier.key}">${pkg.tierLabel}</div>
         <div class="pkg-category">
           <span class="pkg-category-icon">${pkg.categoryIcon}</span>
           <span class="pkg-category-name">${pkg.packageCategory.name}</span>

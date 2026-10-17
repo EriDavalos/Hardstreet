@@ -39,8 +39,8 @@ const SITE_DESIGN_DEFAULT = {
     priceLabel: 'Desde',
     ctaLabel: 'Cotizar',
     // Foto del paquete dentro de la tarjeta: 'none' (sin foto), 'top' (banda
-    // arriba) o 'bg' (de fondo: la foto se ve y encima lleva un degradado del
-    // color de la tarjeta, que es lo que manda `imageFade`).
+    // arriba) o 'bg' (de fondo: la foto se ve a todo color y encima lleva el
+    // velo NEGRO, que es lo que manda `imageFade`).
     imageMode: 'none',
     imageHeight: 150,
     imageFade: 0.7,
@@ -118,6 +118,9 @@ function hsAlpha(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, Number(alpha) || 0))})`;
 }
 
+/** Color del velo que oscurece la FOTO DE FONDO de una tarjeta: negro. */
+const HS_PHOTO_FADE = '#000000';
+
 /** `imageFade` del diseño, normalizado a 0..1 (0 = la foto se ve limpia). */
 function hsPhotoFadeAmount(v) {
   if (v === undefined || v === null || v === '') return SITE_DESIGN_DEFAULT.card.imageFade;
@@ -128,10 +131,11 @@ function hsPhotoFadeAmount(v) {
 /**
  * Degradado que oscurece la FOTO DE FONDO de una tarjeta.
  *
- * La foto se pinta a TODO color y encima va este degradado con el color oscuro
- * de la tarjeta (el de su tier), como en el flyer de referencia: abajo (nombre,
- * servicios y precio) y a la izquierda tapa más, y arriba a la derecha deja ver
- * la foto. [amount] (0..1) manda cuánto tapa.
+ * La foto se pinta a TODO color y encima va este velo, que es NEGRO
+ * ([HS_PHOTO_FADE]): abajo (donde van el nombre, los servicios y el precio) y a
+ * la izquierda tapa más, y arriba a la derecha deja ver la foto. [amount]
+ * (0..1) manda cuánto tapa. Es el mismo velo del panel, así el texto resalta
+ * igual en los dos lados.
  *
  * Los dos degradados van en la MISMA capa para que la foto quede debajo: uno
  * vertical (de arriba abajo) y otro en diagonal (de izquierda a derecha).
@@ -524,19 +528,21 @@ function siteDesignCss(rawDesign) {
     r.push(`.pkg-photo{display:block;width:100%;height:${h}px;object-fit:cover;}`);
   } else if (imageMode === 'bg') {
     // La foto va a TODO color (sin `opacity`): el oscurecido lo pone el
-    // DEGRADADO de encima (`.pkg-photo-bg::after`), así la foto se ve —como en
-    // el flyer— y el texto sigue leyéndose. El degradado de cada tier se emite
-    // más abajo con el color oscuro de SU tarjeta; este es el de respaldo.
+    // DEGRADADO NEGRO de encima (`.pkg-photo-bg::after`), así la foto se ve y
+    // el texto resalta. Es el MISMO velo que pone el panel (`hsPhotoFade` con
+    // negro), para que las dos tarjetas se vean igual.
     r.push(
       '.pkg-photo-bg{position:absolute;inset:0;background-size:cover;' +
         'background-position:center;pointer-events:none;}'
     );
     r.push(
       ".pkg-photo-bg::after{content:'';position:absolute;inset:0;" +
-        `background:${hsPhotoFade(d.brand.dark, hsPhotoFadeAmount(c.imageFade))};}`
+        `background:${hsPhotoFade(HS_PHOTO_FADE, hsPhotoFadeAmount(c.imageFade))};}`
     );
-    // Con la foto de fondo, el contenido sube de capa para seguir leyéndose.
+    // Con la foto de fondo, el contenido sube de capa para seguir leyéndose y
+    // el pie se apoya en un poco más de negro (en el panel también).
     r.push('.package-card>.pkg-flyer-inner{position:relative;z-index:1;}');
+    r.push(`.pkg-footer{background:${hsAlpha('#000000', 0.34)};}`);
   }
 
   // Forma, densidad y comportamiento
@@ -608,16 +614,9 @@ function siteDesignCss(rawDesign) {
     r.push(`${k} .pkg-name{color:#fff;}`);
     r.push(`${k} .pkg-price-value,${k} .pkg-category-name{color:${hsEsc(t.accent)};}`);
     r.push(`${k} .pkg-icon-svg{color:${hsEsc(t.accent)};}`);
-    // La foto de fondo se oscurece con el color oscuro de ESTE tier.
-    if (imageMode === 'bg') {
-      r.push(
-        `${k} .pkg-photo-bg::after{background:${hsPhotoFade(
-          t.dark,
-          hsPhotoFadeAmount(c.imageFade)
-        )};}`
-      );
-    }
-    r.push(`${k} .pkg-subtitle{color:${hsAlpha('#ffffff', 0.55)};}`);
+    r.push(`${k} .pkg-subtitle,${k} .pkg-description{color:${hsAlpha('#ffffff', 0.55)};}`);
+    // El pie lleva un tinte del acento del tier (como el del panel).
+    r.push(`${k} .pkg-footer{background:${hsAlpha(t.accent, 0.05)};}`);
     r.push(
       `${k} .pkg-cta{color:${hsEsc(t.accentSoft)};border-color:${hsAlpha(t.accent, 0.75)};}`
     );

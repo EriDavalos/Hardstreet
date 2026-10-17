@@ -157,12 +157,11 @@ test('la foto va en banda arriba con el alto del diseño', () => {
   assert.doesNotMatch(css, /pkg-photo-bg/);
 });
 
-test('la foto de fondo se ve a todo color y la oscurece el degradado de su tier', () => {
+test('la foto de fondo se ve a todo color y la oscurece el velo NEGRO', () => {
   const css = cssWith({ card: { imageMode: 'bg', imageFade: 0.8 } });
   assert.match(css, /\.pkg-photo-bg\{position:absolute;inset:0;background-size:cover;/);
   // La foto NO se apaga con `opacity` (así se veía lavada): la oscurece el
-  // degradado que va ENCIMA, que es lo que deja ver la foto y leer el texto,
-  // como en el flyer de referencia.
+  // degradado que va ENCIMA, que es lo que deja ver la foto y leer el texto.
   assert.doesNotMatch(
     css,
     /\.pkg-photo-bg\{position:absolute;inset:0;background-size:cover;[^}]*opacity:/
@@ -171,19 +170,70 @@ test('la foto de fondo se ve a todo color y la oscurece el degradado de su tier'
     css,
     /\.pkg-photo-bg::after\{content:'';position:absolute;inset:0;background:linear-gradient\(180deg,/
   );
-  // Cada tier oscurece con SU color oscuro, y `imageFade` manda cuánto tapa
-  // (abajo del todo tapa justo ese valor: 0.8).
-  assert.match(
-    css,
-    /\.package-card\.tier-premium \.pkg-photo-bg::after\{background:linear-gradient\(180deg,rgba\(11, 14, 23, 0\.12\) 0%,/
-  );
-  assert.match(css, /rgba\(11, 14, 23, 0\.8\) 100%\)/);
-  assert.match(
-    css,
-    /\.package-card\.tier-basic \.pkg-photo-bg::after\{background:linear-gradient\(180deg,rgba\(11, 17, 26, 0\.12\) 0%,/
-  );
+  // El velo es NEGRO (el mismo que pone el panel) y `imageFade` manda cuánto
+  // tapa: abajo del todo tapa justo ese valor (0.8).
+  assert.match(css, /rgba\(0, 0, 0, 0\.8\) 100%\)/);
+  // Y NO cambia por tier: ya no hay un degradado propio de cada tarjeta.
+  assert.doesNotMatch(css, /\.tier-\w+ \.pkg-photo-bg::after\{/);
+  assert.doesNotMatch(css, /rgba\(11, 14, 23, 0\.8\) 100%\)/);
+  // Con la foto de fondo, el pie se apoya en un poco más de negro.
+  assert.match(css, /\.pkg-footer\{background:rgba\(0, 0, 0, 0\.34\);\}/);
   assert.match(css, /\.package-card>\.pkg-flyer-inner\{position:relative;z-index:1;\}/);
 });
+
+test('la tarjeta de la web se pinta como la del panel (mismas piezas y textos)', () => {
+  const css = cssWith(null);
+  // Nombre BLANCO en todos los tiers (el panel no usa degradados en el nombre).
+  assert.match(css, /\.package-card\.tier-premium \.pkg-name\{color:#fff;\}/);
+  assert.match(css, /\.package-card\.tier-gold \.pkg-name\{color:#fff;\}/);
+  // La descripción del paquete va en la tarjeta, como en el panel.
+  assert.match(css, /\.package-card\.tier-premium \.pkg-subtitle,\.package-card\.tier-premium \.pkg-description\{color:rgba\(255, 255, 255, 0\.55\);\}/);
+  // Y el pie lleva el tinte del acento de su tier.
+  assert.match(css, /\.package-card\.tier-basic \.pkg-footer\{background:rgba\(143, 176, 212, 0\.05\);\}/);
+
+  // El marcado: badge EN FLUJO dentro del contenido (no flotando encima de la
+  // foto) y la descripción entre el subtítulo y la línea.
+  const r = loadScript('gallery/assets/renderers.js');
+  r.window.HS_SITE_DESIGN = null;
+  const html = r.renderPackageCard(pkgBase({ description: 'Cobertura de todo el día' }));
+  const inner = html.slice(html.indexOf('pkg-flyer-inner'));
+  assert.match(
+    inner,
+    /pkg-flyer-inner">\s*<div class="pkg-tier-badge/,
+    'el badge va como primera pieza del contenido'
+  );
+  assert.match(inner, /<p class="pkg-description">Cobertura de todo el d\u00eda<\/p>/);
+  assert.ok(
+    inner.indexOf('pkg-subtitle') < inner.indexOf('pkg-description') &&
+      inner.indexOf('pkg-description') < inner.indexOf('pkg-divider'),
+    'la descripción va entre el subtítulo y la línea'
+  );
+  // Sin descripción no se pinta el hueco.
+  const sin = r.renderPackageCard(pkgBase({ description: '' }));
+  assert.doesNotMatch(sin, /pkg-description/);
+});
+
+/** Paquete de prueba con lo mínimo que pinta una tarjeta. */
+function pkgBase(extra = {}) {
+  return Object.assign(
+    {
+      id: 1,
+      urlImage: '',
+      services: [],
+      tier: { key: 'premium' },
+      tierLabel: 'Premium',
+      categoryKey: 'boda',
+      packageCategory: { name: 'Bodas' },
+      categoryIcon: '\u{1F4F7}',
+      priceFormatted: '$1',
+      currency: 'MXN',
+      name: 'X',
+      subtitle: 'Sub',
+      description: '',
+    },
+    extra
+  );
+}
 
 test('con la foto en banda (o sin foto) no se pinta ningún degradado de fondo', () => {
   const banda = cssWith({ card: { imageMode: 'top' } });
