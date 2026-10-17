@@ -1245,6 +1245,13 @@ section[id] { scroll-margin-top: 84px; }
   flex: 1;
   line-height: 1.4;
 }
+/* El HUECO de la foto (paquete sin foto, con la foto de FONDO elegida): un
+   lavado del acento que se apaga a negro, igual que en el diseñador. Lo pinta
+   `renderers.js` con `pkg-photo-empty`; `site.js` lo cambia por el de cada
+   tier, y este es el de fábrica si el diseño todavía no llegó. */
+.pkg-photo-empty {
+  background: linear-gradient(135deg, rgba(201, 169, 110, 0.28), rgba(0, 0, 0, 0.35));
+}
 /* El pie vive DENTRO del relleno de la tarjeta: sin banda ni borde que lo
    separe del contenido (así lo pinta el diseñador). Los números salen del
    diseño guardado (`site.js`). */

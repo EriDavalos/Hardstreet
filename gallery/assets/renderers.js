@@ -61,10 +61,16 @@ function packagePhotoUrl(pkg) {
 
 /** HTML de la foto del paquete según dónde la ponga el diseño. */
 function packagePhotoHtml(mode, url) {
-  if (!url || (mode !== 'top' && mode !== 'bg')) return '';
-  return mode === 'top'
-    ? `<img class="pkg-photo" src="${url}" alt="" loading="lazy">`
-    : `<div class="pkg-photo-bg" style="background-image:url('${url}')" aria-hidden="true"></div>`;
+  if (mode !== 'top' && mode !== 'bg') return '';
+  if (mode === 'top') {
+    return url ? `<img class="pkg-photo" src="${url}" alt="" loading="lazy">` : '';
+  }
+  // De FONDO la capa va SIEMPRE: la foto si el paquete tiene, y si no el
+  // degradado del diseño (`pkg-photo-empty`), que es el mismo hueco que enseña
+  // el diseñador. Así una tarjeta sin foto no se ve como un bloque plano.
+  return url
+    ? `<div class="pkg-photo-bg" style="background-image:url('${url}')" aria-hidden="true"></div>`
+    : '<div class="pkg-photo-bg pkg-photo-empty" aria-hidden="true"></div>';
 }
 
 function designCardPhoto(pkg) {
@@ -85,11 +91,23 @@ function designCardPhoto(pkg) {
 function refreshPackagePhotos(root) {
   const mode = designImageMode();
   (root || document).querySelectorAll('.package-card').forEach((card) => {
-    const html = packagePhotoHtml(mode, card.dataset.hsPhoto || '');
+    const url = card.dataset.hsPhoto || '';
+    const html = packagePhotoHtml(mode, url);
     const current = card.querySelector('.pkg-photo, .pkg-photo-bg');
-    const want = html.includes('pkg-photo-bg') ? 'bg' : html ? 'top' : 'none';
+    // Ojo: en modo 'bg' la capa existe con foto y sin ella, así que no basta
+    // con comparar "bg": hay que ver si la que está es la del hueco y si toca
+    // cambiarla por la foto (el paquete pudo ganar su foto después).
+    const want = html.includes('pkg-photo-empty')
+      ? 'bg-empty'
+      : html.includes('pkg-photo-bg')
+        ? 'bg-photo'
+        : html ? 'top' : 'none';
     const has = current
-      ? (current.classList.contains('pkg-photo') ? 'top' : 'bg')
+      ? (current.classList.contains('pkg-photo')
+          ? 'top'
+          : current.classList.contains('pkg-photo-empty')
+            ? 'bg-empty'
+            : 'bg-photo')
       : 'none';
     if (want === has) return; // ya está como el diseño pide
     if (current) current.remove();

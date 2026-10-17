@@ -676,6 +676,16 @@ function siteDesignCss(rawDesign) {
         `border-color:${c.borderWidth ? hsAlpha(t.accent, t.borderAlpha) : 'transparent'};` +
         `border-width:${Number(c.borderWidth) || 0}px;}`
     );
+    // El HUECO de la foto (paquete sin foto, con la foto de FONDO elegida): el
+    // mismo degradado del diseñador —lavado del acento que se apaga a negro en
+    // diagonal—, para que la tarjeta no se vea como un bloque plano. Solo se
+    // emite cuando el diseño pide la foto de fondo.
+    if (imageMode === 'bg') {
+      r.push(
+        `${k} .pkg-photo-empty{background:linear-gradient(135deg,` +
+          `${hsAlpha(t.accent, 0.28)},${hsAlpha('#000000', 0.35)});}`
+      );
+    }
     r.push(`${k} .pkg-name{color:#fff;}`);
     r.push(`${k} .pkg-price-value,${k} .pkg-category-name{color:${hsEsc(t.accent)};}`);
     r.push(`${k} .pkg-icon-svg{color:${hsEsc(t.accent)};}`);

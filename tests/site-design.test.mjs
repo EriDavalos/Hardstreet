@@ -308,17 +308,61 @@ function pkgBase(extra = {}) {
   );
 }
 
-test('un paquete SIN foto se ve como la tarjeta del panel (sin foto de relleno)', () => {
+test('un paquete SIN foto enseña el degradado del hueco (no una foto de relleno)', () => {
   const r = loadScript('gallery/assets/renderers.js');
-  // Con la foto de fondo pedida, un paquete sin `url_image` NO inventa una
-  // foto del pool: la tarjeta se pinta limpia, igual que en el panel.
+  // Con la foto de fondo pedida, un paquete sin `url_image` NO inventa una foto
+  // del pool: pinta la capa del HUECO (`pkg-photo-empty`), el mismo degradado
+  // que enseña el diseñador, así la tarjeta no queda como un bloque plano.
   r.window.HS_SITE_DESIGN = { card: { imageMode: 'bg' } };
   const sin = r.renderPackageCard(pkgBase({ urlImage: '' }));
-  assert.doesNotMatch(sin, /pkg-photo-bg|pkg-photo"/);
+  assert.match(sin, /<div class="pkg-photo-bg pkg-photo-empty"/);
+  assert.doesNotMatch(sin, /background-image:url/);
   assert.match(sin, /data-hs-photo=""/);
   // Y con foto propia sí la pinta (es la suya, no una del sitio).
   const con = r.renderPackageCard(pkgBase({ urlImage: 'images/suya.jpg' }));
   assert.match(con, /background-image:url\('images\/suya\.jpg'\)/);
+  assert.doesNotMatch(con, /pkg-photo-empty/);
+});
+
+test('el hueco de la foto lleva el degradado del acento de su tier', () => {
+  const css = cssWith({ card: { imageMode: 'bg' } });
+  // Es el MISMO par de números del diseñador (acento 28% → negro 35%).
+  assert.match(
+    css,
+    /\.package-card\.tier-premium \.pkg-photo-empty\{background:linear-gradient\(135deg,rgba\(201, 169, 110, 0\.28\),rgba\(0, 0, 0, 0\.35\)\);\}/
+  );
+  assert.match(
+    css,
+    /\.package-card\.tier-basic \.pkg-photo-empty\{background:linear-gradient\(135deg,rgba\(143, 176, 212, 0\.28\),rgba\(0, 0, 0, 0\.35\)\);\}/
+  );
+  // El velo cae sobre la capa (la del hueco incluida): una sola regla.
+  assert.match(css, /\.pkg-photo-bg::after\{content:'';position:absolute;inset:0;background:linear-gradient\(/);
+});
+
+test('la tarjeta que gana su foto cambia el hueco por la foto', () => {
+  const r = loadScript('gallery/assets/renderers.js');
+  r.window.HS_SITE_DESIGN = { card: { imageMode: 'bg' } };
+  const card = fakeCard('');
+  const root = { querySelectorAll: () => [card] };
+
+  // Sin foto: está la capa del HUECO (el degradado), no una foto inventada.
+  r.refreshPackagePhotos(root);
+  assert.equal(card.foto, 'pkg-photo-bg');
+  assert.equal(card.hueco, true);
+  assert.doesNotMatch(card.hijos[0].html, /background-image:url/);
+
+  // El paquete gana su foto: la MISMA capa pasa a llevar la foto (sin sumar otra).
+  card.dataset.hsPhoto = 'images/llego.jpg';
+  r.refreshPackagePhotos(root);
+  assert.equal(card.foto, 'pkg-photo-bg');
+  assert.equal(card.hueco, false);
+  assert.equal(card.hijos.length, 1);
+  assert.match(card.hijos[0].html, /background-image:url\('images\/llego\.jpg'\)/);
+
+  // Y repetirlo no la cambia otra vez (idempotente).
+  r.refreshPackagePhotos(root);
+  assert.equal(card.hijos.length, 1);
+  assert.equal(card.hueco, false);
 });
 
 test('los servicios van con el MISMO check que la tarjeta del panel', () => {
@@ -334,9 +378,9 @@ test('los servicios van con el MISMO check que la tarjeta del panel', () => {
 
 test('con la foto en banda (o sin foto) no se pinta ningún degradado de fondo', () => {
   const banda = cssWith({ card: { imageMode: 'top' } });
-  assert.doesNotMatch(banda, /pkg-photo-bg|pkg-photo-fade/);
+  assert.doesNotMatch(banda, /pkg-photo-bg|pkg-photo-empty|pkg-photo-fade/);
   const sin = cssWith({ card: { imageMode: 'none' } });
-  assert.doesNotMatch(sin, /pkg-photo-bg|pkg-photo-fade/);
+  assert.doesNotMatch(sin, /pkg-photo-bg|pkg-photo-empty|pkg-photo-fade/);
 });
 
 test('un modo de foto desconocido cae a "sin foto"', () => {
@@ -385,14 +429,20 @@ function fakeCard(photo) {
         sel.split(',').some((s) => s.trim() === `.${h.clase}`)
       ) || null,
     insertAdjacentHTML: (_, html) => {
-      const clase = html.includes('pkg-photo-bg') ? 'pkg-photo-bg' : 'pkg-photo';
+      const clases = html.includes('pkg-photo-empty')
+        ? ['pkg-photo-bg', 'pkg-photo-empty']
+        : html.includes('pkg-photo-bg')
+          ? ['pkg-photo-bg']
+          : ['pkg-photo'];
+      const clase = clases[0];
       if (card.hijos.some((h) => h.clase === clase)) {
         throw new Error('foto duplicada: el arreglo no es idempotente');
       }
       card.hijos.push({
         clase,
+        clases,
         html,
-        classList: { contains: (c) => c === clase },
+        classList: { contains: (c) => clases.includes(c) },
         remove: () => {
           card.hijos = card.hijos.filter((h) => h.clase !== clase);
         },
@@ -401,6 +451,10 @@ function fakeCard(photo) {
   };
   Object.defineProperty(card, 'foto', {
     get: () => (card.hijos.length ? card.hijos[0].clase : 'none'),
+  });
+  /** ¿La capa que está puesta es la del HUECO (paquete sin foto)? */
+  Object.defineProperty(card, 'hueco', {
+    get: () => !!card.hijos.length && card.hijos[0].clases.includes('pkg-photo-empty'),
   });
   return card;
 }
