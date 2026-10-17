@@ -50,8 +50,23 @@ const SITE_DESIGN_DEFAULT = {
     imageFadeFrom: 'bottom',
     // Ángulo LIBRE del velo (0..359°): -1 = usar `imageFadeFrom`.
     imageFadeAngle: -1,
-    // Sombra (degradado negro) sobre la foto de fondo: 0 = sin sombra.
-    imageShadow: 0,
+    // Estilo 'fade' (fondo con degradado de desaparición): hasta dónde se ve
+    // la foto y dónde termina de fundirse con el fondo (0..1, desde el lado
+    // contrario a `imageFadeFrom`).
+    imageFadeStart: 0.15,
+    imageFadeEnd: 0.85,
+    // Fondo de la tarjeta en ese estilo: un color o un degradado de dos
+    // colores con su ángulo (0 = hacia arriba, 90 = a la derecha).
+    cardBgFrom: '#0B0E17',
+    cardBgTo: '#0B111A',
+    cardBgGradient: false,
+    cardBgAngle: 135,
+    // Sombra (degradado negro) sobre la foto de fondo. Se ajusta como en
+    // Photoshop: fuerza + dónde empieza y termina el desvanecido (0..1 desde
+    // abajo). 0 = sin sombra.
+    imageShadow: 0.55,
+    imageShadowStart: 0.08,
+    imageShadowEnd: 0.72,
     // Entrada de las tarjetas del catálogo: 'up' | 'fade' | 'zoom' | 'none'.
     animMode: 'up',
     animMs: 600,
@@ -187,6 +202,33 @@ const HS_FADE_SIDE_DEG = {
 function hsPhotoFadeAngle(v) {
   const n = Number(v);
   return Number.isFinite(n) && n >= 0 ? ((n % 360) + 360) % 360 : -1;
+}
+
+/** Número de un ajuste del estilo `fade` (0..1, grados): nunca NaN. */
+function hsCardNum(v, fallback) {
+  if (v === undefined || v === null || v === '') return fallback;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+/** Color del fondo de la tarjeta: #RGB/#RRGGBB válido o el de fábrica. */
+function hsCardColor(v, fallback) {
+  const s = String(v == null ? '' : v).trim();
+  return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(s) ? s : fallback;
+}
+
+/**
+ * Ángulo CSS del desvanecido de la foto (estilo `fade`).
+ *
+ * Es el MISMO criterio que el panel (`hsFadeCssDeg`): si hay ángulo libre manda
+ * él; si no, la dirección nombrada. La foto se ve del lado contrario y se
+ * funde con el fondo del lado indicado.
+ */
+function hsPhotoFadeDeg(card) {
+  const free = hsPhotoFadeAngle(card.imageFadeAngle);
+  if (free >= 0) return free;
+  const key = String(card.imageFadeFrom);
+  return HS_FADE_DEG[key] === undefined ? 180 : HS_FADE_DEG[key];
 }
 
 function hsPhotoFade(dark, amount, from, angle) {
@@ -580,18 +622,24 @@ function siteDesignCss(rawDesign) {
   // FOTO del paquete. La foto la pinta `renderers.js` (de los paquetes de la
   // web); aquí solo se decide DÓNDE va y cuánto se ve.
   const imageMode = String(c.imageMode || 'none');
+  // La capa de foto de fondo sirve para los DOS estilos que la usan: 'bg' (con
+  // velo encima) y 'fade' (fundida con el fondo con una máscara).
+  const photoBackdrop = imageMode === 'bg' || imageMode === 'fade';
   if (imageMode === 'top') {
     const h = Math.max(0, Number(c.imageHeight) || 0);
     r.push(`.pkg-photo{display:block;width:100%;height:${h}px;object-fit:cover;}`);
-  } else if (imageMode === 'bg') {
-    // La foto va a TODO color (sin `opacity`): el oscurecido lo pone el
-    // DEGRADADO de encima (`.pkg-photo-bg::after`), así la foto se ve y el
-    // texto resalta. Es el MISMO velo que pone el panel (`hsPhotoFade`), con
-    // su color y su dirección, para que las dos tarjetas se vean igual.
+  }
+  if (photoBackdrop) {
     r.push(
       '.pkg-photo-bg{position:absolute;inset:0;background-size:cover;' +
         'background-position:center;pointer-events:none;}'
     );
+  }
+  if (imageMode === 'bg') {
+    // La foto va a TODO color (sin `opacity`): el oscurecido lo pone el
+    // DEGRADADO de encima (`.pkg-photo-bg::after`), así la foto se ve y el
+    // texto resalta. Es el MISMO velo que pone el panel (`hsPhotoFade`), con
+    // su color y su dirección, para que las dos tarjetas se vean igual.
     r.push(
       ".pkg-photo-bg::after{content:'';position:absolute;inset:0;" +
         `background:${hsPhotoFade(
@@ -605,15 +653,33 @@ function siteDesignCss(rawDesign) {
     // da profundidad y hace resaltar el texto aunque el velo sea de color.
     const shadow = Math.max(0, Math.min(1, Number(c.imageShadow) || 0));
     if (shadow > 0) {
+      // Dos puntos móviles (como las paradas de un degradado de Photoshop):
+      // desde abajo, negro sólido hasta `start` y apagado del todo en `end`.
+      const start = Math.max(0, Math.min(0.95, Number(c.imageShadowStart) || 0));
+      const end = Math.max(start + 0.05, Math.min(1, Number(c.imageShadowEnd) || 0));
       r.push(
         ".pkg-photo-bg::before{content:'';position:absolute;inset:0;" +
           'background:linear-gradient(to top,' +
           `${hsAlpha('#000000', shadow)} 0%,` +
-          `${hsAlpha('#000000', shadow * 0.55)} 45%,` +
-          'rgba(0,0,0,0) 100%);}'
+          `${hsAlpha('#000000', shadow)} ${(start * 100).toFixed(1)}%,` +
+          `rgba(0,0,0,0) ${(end * 100).toFixed(1)}%);}`
       );
     }
     // Con la foto de fondo, el contenido sube de capa para seguir leyéndose.
+    r.push('.package-card>.pkg-flyer-inner{position:relative;z-index:1;}');
+  }
+  if (imageMode === 'fade') {
+    // FONDO CON DESVANECIDO: la foto NO lleva velo. Se funde con el fondo de
+    // la tarjeta con una MÁSCARA del mismo degradado que enseña el diseñador
+    // (dos paradas: dónde se ve la foto y dónde desaparece). La web y el panel
+    // comparten los números; así el resultado es idéntico.
+    const a = Math.max(0, Math.min(0.95, hsCardNum(c.imageFadeStart, 0.15)));
+    const b = Math.max(a + 0.05, Math.min(1, hsCardNum(c.imageFadeEnd, 0.85)));
+    const mask =
+      `linear-gradient(${hsPhotoFadeDeg(c)}deg,#000 ${(a * 100).toFixed(1)}%,` +
+      `transparent ${(b * 100).toFixed(1)}%)`;
+    r.push(`.pkg-photo-bg{-webkit-mask-image:${mask};mask-image:${mask};}`);
+    // El contenido va por encima de la foto (y de su degradado de fondo).
     r.push('.package-card>.pkg-flyer-inner{position:relative;z-index:1;}');
   }
 
@@ -692,13 +758,25 @@ function siteDesignCss(rawDesign) {
     );
     // El HUECO de la foto (paquete sin foto, con la foto de FONDO elegida): el
     // mismo degradado del diseñador —lavado del acento que se apaga a negro en
-    // diagonal—, para que la tarjeta no se vea como un bloque plano. Solo se
-    // emite cuando el diseño pide la foto de fondo.
-    if (imageMode === 'bg') {
+    // diagonal—, para que la tarjeta no se vea como un bloque plano. En el
+    // estilo `fade` ese hueco también se desvanece (lleva la máscara).
+    if (photoBackdrop) {
       r.push(
         `${k} .pkg-photo-empty{background:linear-gradient(135deg,` +
           `${hsAlpha(t.accent, 0.28)},${hsAlpha('#000000', 0.35)});}`
       );
+    }
+    // FONDO de la tarjeta en el estilo `fade`: el color (o el degradado de dos
+    // colores) que elige el diseñador, en vez del fondo del tier. Va DESPUÉS
+    // de la regla del tier para pisarla (misma especificidad).
+    if (imageMode === 'fade') {
+      const from = hsCardColor(c.cardBgFrom, '#0B0E17');
+      const to = hsCardColor(c.cardBgTo, '#0B111A');
+      const ang = ((Math.round(hsCardNum(c.cardBgAngle, 135)) % 360) + 360) % 360;
+      const bg = c.cardBgGradient === true
+        ? `linear-gradient(${ang}deg,${hsEsc(from)},${hsEsc(to)})`
+        : hsEsc(from);
+      r.push(`${k}{background:${bg};}`);
     }
     r.push(`${k} .pkg-name{color:#fff;}`);
     r.push(`${k} .pkg-price-value,${k} .pkg-category-name{color:${hsEsc(t.accent)};}`);

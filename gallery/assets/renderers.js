@@ -39,13 +39,15 @@ function designCtaLabel() {
  *   'top' → banda arriba (el alto lo fija el CSS con `imageHeight`)
  *   'bg'  → de fondo: la foto se ve y encima va el degradado del CSS, con el
  *           color de la tarjeta y la fuerza de `imageFade`
+ *   'fade'→ fondo con degradado de desaparición: la foto se funde con el color
+ *           (o el degradado) de fondo de la tarjeta
  *
  * La foto es la del paquete (`url_image`) y, si no tiene, una del pool: es la
  * misma que ya usan los carruseles, así que no hay otra fuente que mantener.
  */
 function designImageMode() {
   const mode = String(designCard().imageMode || 'none');
-  return mode === 'top' || mode === 'bg' ? mode : 'none';
+  return mode === 'top' || mode === 'bg' || mode === 'fade' ? mode : 'none';
 }
 
 /**
@@ -61,7 +63,7 @@ function packagePhotoUrl(pkg) {
 
 /** HTML de la foto del paquete según dónde la ponga el diseño. */
 function packagePhotoHtml(mode, url) {
-  if (mode !== 'top' && mode !== 'bg') return '';
+  if (mode !== 'top' && mode !== 'bg' && mode !== 'fade') return '';
   if (mode === 'top') {
     return url ? `<img class="pkg-photo" src="${url}" alt="" loading="lazy">` : '';
   }

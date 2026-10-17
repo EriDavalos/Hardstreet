@@ -254,6 +254,86 @@ test('el ángulo libre del velo manda sobre la dirección', () => {
   assert.match(raro, /background:linear-gradient\(180deg,/);
 });
 
+test('la sombra de la foto usa sus DOS paradas, como el panel', () => {
+  // El diseñador mueve a mano dónde empieza y dónde se apaga el degradado
+  // negro. La web tiene que pintar EXACTAMENTE esas dos paradas.
+  const css = cssWith({
+    card: {
+      imageMode: 'bg',
+      imageFade: 0,
+      imageShadow: 0.6,
+      imageShadowStart: 0.12,
+      imageShadowEnd: 0.8,
+    },
+  });
+  assert.match(
+    css,
+    /\.pkg-photo-bg::before\{content:'';position:absolute;inset:0;background:linear-gradient\(to top,rgba\(0, 0, 0, 0\.6\) 0%,rgba\(0, 0, 0, 0\.6\) 12\.0%,rgba\(0,0,0,0\) 80\.0%\);\}/
+  );
+  // Sin fuerza no se emite la capa (no hay sombra que pintar).
+  const sin = cssWith({ card: { imageMode: 'bg', imageShadow: 0 } });
+  assert.doesNotMatch(sin, /pkg-photo-bg::before/);
+  // El fin nunca queda antes del inicio: se empuja 5 puntos.
+  const pegadas = cssWith({
+    card: { imageMode: 'bg', imageShadow: 1, imageShadowStart: 0.9, imageShadowEnd: 0.2 },
+  });
+  assert.match(pegadas, /rgba\(0, 0, 0, 1\) 90\.0%,rgba\(0,0,0,0\) 95\.0%\)/);
+});
+
+test('estilo fondo con degradado: la foto se funde con el fondo elegido', () => {
+  const css = cssWith({
+    card: {
+      imageMode: 'fade',
+      imageFadeFrom: 'bottom',
+      imageFadeStart: 0.2,
+      imageFadeEnd: 0.7,
+      cardBgFrom: '#123456',
+      cardBgTo: '#654321',
+      cardBgGradient: true,
+      cardBgAngle: 200,
+      imageShadow: 0.8,
+    },
+  });
+  // La capa de foto existe (misma caja que la de fondo) y lleva la máscara con
+  // las dos paradas del diseñador.
+  assert.match(
+    css,
+    /\.pkg-photo-bg\{position:absolute;inset:0;background-size:cover;background-position:center;pointer-events:none;\}/
+  );
+  assert.match(
+    css,
+    /\.pkg-photo-bg\{-webkit-mask-image:linear-gradient\(180deg,#000 20\.0%,transparent 70\.0%\);mask-image:linear-gradient\(180deg,#000 20\.0%,transparent 70\.0%\);\}/
+  );
+  // El fondo es el degradado elegido, no el del tier.
+  assert.match(
+    css,
+    /\.package-card\.tier-premium\{background:linear-gradient\(200deg,#123456,#654321\);\}/
+  );
+  // En este estilo NO hay velo ni sombra encima de la foto.
+  assert.doesNotMatch(css, /pkg-photo-bg::after/);
+  assert.doesNotMatch(css, /pkg-photo-bg::before/);
+
+  // Fondo de UN color y máscara con ángulo libre.
+  const plano = cssWith({
+    card: {
+      imageMode: 'fade',
+      imageFadeAngle: 45,
+      cardBgFrom: '#0A0B0C',
+      cardBgGradient: false,
+      imageFadeStart: 0,
+      imageFadeEnd: 1,
+    },
+  });
+  assert.match(
+    plano,
+    /mask-image:linear-gradient\(45deg,#000 0\.0%,transparent 100\.0%\)/
+  );
+  assert.match(plano, /\.package-card\.tier-basic\{background:#0A0B0C;\}/);
+  // Un color inválido cae al de fábrica (no rompe el CSS).
+  const raro = cssWith({ card: { imageMode: 'fade', cardBgFrom: 'no-es-color' } });
+  assert.match(raro, /\.package-card\.tier-gold\{background:#0B0E17;\}/);
+});
+
 test('la tarjeta de la web se pinta como la del panel (mismas piezas y textos)', () => {
   const css = cssWith(null);
   // Nombre BLANCO en todos los tiers (el panel no usa degradados en el nombre).
