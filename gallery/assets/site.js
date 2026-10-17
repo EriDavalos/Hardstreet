@@ -50,6 +50,8 @@ const SITE_DESIGN_DEFAULT = {
     imageFadeFrom: 'bottom',
     // Ángulo LIBRE del velo (0..359°): -1 = usar `imageFadeFrom`.
     imageFadeAngle: -1,
+    // Sombra (degradado negro) sobre la foto de fondo: 0 = sin sombra.
+    imageShadow: 0,
     // Entrada de las tarjetas del catálogo: 'up' | 'fade' | 'zoom' | 'none'.
     animMode: 'up',
     animMs: 600,
@@ -599,6 +601,18 @@ function siteDesignCss(rawDesign) {
           c.imageFadeAngle
         )};}`
     );
+    // SOMBRA sobre la foto (degradado negro desde abajo), aparte del velo:
+    // da profundidad y hace resaltar el texto aunque el velo sea de color.
+    const shadow = Math.max(0, Math.min(1, Number(c.imageShadow) || 0));
+    if (shadow > 0) {
+      r.push(
+        ".pkg-photo-bg::before{content:'';position:absolute;inset:0;" +
+          'background:linear-gradient(to top,' +
+          `${hsAlpha('#000000', shadow)} 0%,` +
+          `${hsAlpha('#000000', shadow * 0.55)} 45%,` +
+          'rgba(0,0,0,0) 100%);}'
+      );
+    }
     // Con la foto de fondo, el contenido sube de capa para seguir leyéndose.
     r.push('.package-card>.pkg-flyer-inner{position:relative;z-index:1;}');
   }
