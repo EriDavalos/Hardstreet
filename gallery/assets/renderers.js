@@ -48,9 +48,15 @@ function designImageMode() {
   return mode === 'top' || mode === 'bg' ? mode : 'none';
 }
 
-/** La foto de un paquete, ya lista para meter en la tarjeta. */
+/**
+ * La foto de un paquete, ya lista para meter en la tarjeta.
+ *
+ * Es SOLO la foto del paquete (`url_image`). Si no tiene, la tarjeta se ve
+ * limpia, igual que la del panel: antes se ponía una del pool del sitio y la
+ * misma tarjeta cambiaba de foto sin que nadie la hubiera elegido.
+ */
 function packagePhotoUrl(pkg) {
-  return String(imageForPackage(pkg) || '').replace(/"/g, '&quot;');
+  return String((pkg && pkg.urlImage) || '').replace(/"/g, '&quot;');
 }
 
 /** HTML de la foto del paquete según dónde la ponga el diseño. */
@@ -97,10 +103,18 @@ function refreshPackagePhotos(root) {
 // (`WebPackageCard`): foto → badge del tier (EN FLUJO, arriba a la izquierda) →
 // categoría → nombre → subtítulo → descripción → línea → cuántos servicios →
 // lista → pie con precio y botón. Así las dos tarjetas son la misma tarjeta.
+// Check con el que el PANEL marca cada servicio incluido (15 px). Es el
+// MISMO símbolo en la web y en la tarjeta del admin; antes la web dibujaba
+// el icono propio de cada servicio y las dos tarjetas no se parecían.
+const PkgCheckSvg =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+  'stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" ' +
+  'width="14" height="14"><path d="M20 6 9 17l-5-5"/></svg>';
+
 function renderPackageCard(pkg) {
   const serviciosHTML = pkg.services.map(s =>
     `<li>
-      <span class="pkg-icon-svg">${s.iconSvg}</span>
+      <span class="pkg-icon-svg">${PkgCheckSvg}</span>
       <span class="pkg-service-text">${s.name}</span>
     </li>`
   ).join('');

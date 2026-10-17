@@ -55,7 +55,7 @@ Hereda los datos del paquete principal y agrega pagos, estado y sus propios serv
 ```ts
 Service   { id, name, description, icon }              // icon: "icon/video.svg"
 Tier      { id, name, tier }                           // Premium(1), Gold(2), Basic(3)
-PackageCategory { id, name, icon }                     // Boda, XV Años, Bautizo...
+PackageCategory { id, name, icon, urlImage }           // Boda, XV Años... (urlImage = portada)
 Status    { id, name }
 ```
 
@@ -118,7 +118,8 @@ Usados por el panel `Hardstreet_Admin/` (Flutter), contra la MISMA API que la we
 | GET | `/api/auth/me` | header Authorization: Bearer | Usuario de la sesión (User) |
 | GET | `/api/packages` | — | Catálogo. Filtros: `?extern=true/false`, `?category=boda` |
 | GET | `/api/packages/:id` | — | Un paquete con todo incluido |
-| GET | `/api/categories` | — | Categorías (para los filtros) |
+| GET | `/api/categories` | — | Categorías (para los filtros), con su `urlImage` |
+| GET/POST/PUT/DELETE | `/api/admin/categories` | header Bearer | Categorías del catálogo (permiso `Paquetes`): listar, crear `{name, urlImage?}`, editar y dar de baja |
 | GET | `/api/tiers` | — | Tiers |
 | GET | `/api/services` | — | Catálogo de servicios |
 | GET | `/api/extern-services` | — | Servicios externos (carousel, `is_extern=1`) |
@@ -239,7 +240,7 @@ El frontend ya **no tiene datos demo ni fallback local**: todo viene del backend
 
 1. **Contraseñas vacías** — `users.password` estaba `''`. El login real requiere bcrypt: el seed las llena.
 2. **Un solo paquete** — `packages` solo tenía la Boda Premium (id 1). La landing muestra 14 paquetes por categoría/tier: el seed los inserta (ids 2–14) con sus `packages_services`.
-3. **`packages_categories.icon` vacío** — la tabla tiene columna `icon` pero ningún valor. El front usa SVGs propios mientras tanto; cuando la llenes (ej. `icon/heart.svg`), se puede mapear directo.
+3. **`packages_categories.icon` vacío** — la tabla tiene columna `icon` pero ningún valor. El front usa SVGs propios mientras tanto; cuando la llenes (ej. `icon/heart.svg`), se puede mapear directo. La tabla ya tiene además **`url_image`** (la foto con la que el panel presenta la categoría en su galería; migración `Hardstreet-DB/2026-10-16_categorias_imagen.sql`), y el modelo la expone como `PackageCategory.urlImage`.
 4. **`is_extern` nunca usado** — no había paquetes con `is_extern = 1`, así que el carousel "Lo que Ofrecemos" no tenía fuente de datos. El seed crea 6 (ids 21–26).
 5. **`status` global para compras** — `purchased_packages.id_status` apunta a `status`, pero esa tabla era de servicios. Funciona, pero el seed agrega `Pagado(4)` y `Cancelado(5)` para estados de compra.
 6. **`galleries` casi vacía** — 1 solo registro (`urldelitem`, no público). El seed agrega 8 ítems demo ligados a la compra 1 con las imágenes reales del repo.

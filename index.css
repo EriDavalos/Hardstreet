@@ -1177,26 +1177,29 @@ section[id] { scroll-margin-top: 84px; }
 .pkg-flyer-inner {
   padding: 0;
 }
+/* Las medidas de abajo son las de la tarjeta del PANEL (`WebPackageCard`):
+   mismo nombre, subtítulo, descripción, divisoria, lista, pie y botón. El
+   relleno y los márgenes del pie los emite `site.js` con el valor del diseño. */
 .pkg-header {
   padding: 0;
-  margin-top: 0.6rem;
+  margin-top: 0;
 }
 .pkg-name {
   font-family: 'Playfair Display', serif;
-  font-size: 1.4rem; font-weight: 700;
-  margin-bottom: 0.25rem;
+  font-size: 22px; font-weight: 700;
+  margin-bottom: 0;
   line-height: 1.2;
 }
 .pkg-subtitle {
-  font-family: 'Cormorant Garamond', serif;
-  font-style: italic; font-size: 0.78rem;
+  font-style: italic; font-size: 12.5px;
   color: var(--text-dim);
   line-height: 1.4;
+  margin-top: 4px;
 }
 /* La descripción de la pestaña Datos: el panel la enseña, la web no la tenía. */
 .pkg-description {
-  margin-top: 0.5rem;
-  font-size: 0.78rem;
+  margin-top: 8px;
+  font-size: 12px;
   line-height: 1.45;
   color: var(--text-muted);
 }
@@ -1204,13 +1207,13 @@ section[id] { scroll-margin-top: 84px; }
   width: 100%;
   height: 1px;
   background: rgba(255, 255, 255, 0.07);
-  margin: 0.85rem 0 0;
+  margin: 12px 0 0;
 }
 .pkg-services-header {
-  padding: 0.65rem 0 0.35rem;
+  padding: 10px 0 6px;
 }
 .pkg-services-count {
-  font-size: 0.68rem;
+  font-size: 11px;
   letter-spacing: 1.4px;
   text-transform: uppercase;
   font-weight: 700;
@@ -1218,20 +1221,25 @@ section[id] { scroll-margin-top: 84px; }
 }
 .pkg-services {
   list-style: none;
-  padding: 0 0 0.9rem;
+  padding: 0 0 14px;
 }
 .pkg-services li {
-  display: flex; align-items: center; gap: 0.5rem;
-  padding: 0.25rem 0;
-  font-size: 0.78rem;
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 0;
+  font-size: 12.5px;
+  line-height: 1.35;
   color: var(--text-muted);
 }
+/* El panel marca cada servicio con un check del acento (15 px), no con el
+   icono del servicio: así se ven igual las dos tarjetas. */
 .pkg-icon-svg {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   flex-shrink: 0;
   color: var(--gold);
-  opacity: 0.95;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .pkg-icon-svg svg {
   width: 100%;
@@ -1247,11 +1255,14 @@ section[id] { scroll-margin-top: 84px; }
   flex: 1;
   line-height: 1.4;
 }
+/* El pie va a SANGRE completa (sin el relleno del contenido): los márgenes
+   laterales e inferiores los emite `site.js` con el relleno del diseño. */
 .pkg-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.9rem 0 0;
+  gap: 10px;
+  padding: 12px 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
   background: transparent;
 }
@@ -1260,41 +1271,46 @@ section[id] { scroll-margin-top: 84px; }
   flex-direction: column;
 }
 .pkg-price-label {
-  font-size: 0.66rem; letter-spacing: 1.5px;
+  font-size: 10.5px; letter-spacing: 1.5px;
   font-style: italic; color: var(--text-dim);
-  margin-bottom: 0.1rem;
+  margin-bottom: 0;
 }
 .pkg-price-value {
   font-family: 'Playfair Display', serif;
-  font-size: 1.4rem; font-weight: 800;
+  font-size: 22px; font-weight: 800;
   color: var(--gold);
-  line-height: 1;
+  line-height: 1.1;
 }
 .pkg-price-note {
-  font-size: 0.66rem;
+  font-size: 10.5px;
   letter-spacing: 1.2px;
   color: var(--text-dim);
-  margin-top: 0.1rem;
+  margin-top: 0;
 }
+/* El CTA de la web es la MISMA pastilla del panel ("Editar"): relleno con el
+   tinte del acento, texto en el acento, sin borde ni MAYÚSCULAS. */
 .pkg-cta {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  border: 1px solid var(--gold); color: var(--gold);
-  font-size: 0.75rem; letter-spacing: 2px;
-  text-transform: uppercase;
-  transition: all 0.4s ease;
+  gap: 7px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: rgba(201, 169, 110, 0.18);
+  color: var(--gold);
+  font-size: 12.5px; font-weight: 700;
+  letter-spacing: 0; text-transform: none;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 .pkg-cta svg {
+  width: 16px; height: 16px;
   transition: transform 0.3s ease;
 }
 .pkg-cta:hover {
-  background: var(--gold); color: var(--bg);
-  box-shadow: 0 8px 25px rgba(201, 169, 110, 0.25);
+  background: rgba(201, 169, 110, 0.28); color: var(--gold);
 }
 .pkg-cta:hover svg {
-  transform: translateX(4px);
+  transform: translateX(3px);
 }
 
 /* ========== EXTERN SERVICES CAROUSEL ========== */

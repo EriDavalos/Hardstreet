@@ -40,10 +40,13 @@ const SITE_DESIGN_DEFAULT = {
     ctaLabel: 'Cotizar',
     // Foto del paquete dentro de la tarjeta: 'none' (sin foto), 'top' (banda
     // arriba) o 'bg' (de fondo: la foto se ve a todo color y encima lleva el
-    // velo NEGRO, que es lo que manda `imageFade`).
+    // velo del color de `imageFadeColor`, con la fuerza de `imageFade`).
     imageMode: 'none',
     imageHeight: 150,
     imageFade: 0.7,
+    imageFadeColor: '#000000',
+    // De dónde viene el velo: 'bottom' (tapa más abajo) o 'top'.
+    imageFadeFrom: 'bottom',
     // Entrada de las tarjetas del catálogo: 'up' | 'fade' | 'zoom' | 'none'.
     animMode: 'up',
     animMs: 600,
@@ -118,7 +121,7 @@ function hsAlpha(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, Number(alpha) || 0))})`;
 }
 
-/** Color del velo que oscurece la FOTO DE FONDO de una tarjeta: negro. */
+/** Color de fábrica del velo que oscurece la FOTO DE FONDO de una tarjeta. */
 const HS_PHOTO_FADE = '#000000';
 
 /** `imageFade` del diseño, normalizado a 0..1 (0 = la foto se ve limpia). */
@@ -128,24 +131,30 @@ function hsPhotoFadeAmount(v) {
   return Math.max(0, Math.min(1, Number.isFinite(n) ? n : SITE_DESIGN_DEFAULT.card.imageFade));
 }
 
+/** Color del velo del diseño (negro si viene vacío o inválido). Puro. */
+function hsPhotoFadeColor(v) {
+  const s = String(v == null ? '' : v).trim();
+  return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(s) ? s : HS_PHOTO_FADE;
+}
+
 /**
  * Degradado que oscurece la FOTO DE FONDO de una tarjeta.
  *
- * La foto se pinta a TODO color y encima va este velo, que es NEGRO
- * ([HS_PHOTO_FADE]): abajo (donde van el nombre, los servicios y el precio) y a
- * la izquierda tapa más, y arriba a la derecha deja ver la foto. [amount]
- * (0..1) manda cuánto tapa. Es el mismo velo del panel, así el texto resalta
- * igual en los dos lados.
+ * La foto se pinta a TODO color y encima va este velo, con el color
+ * [dark] y la fuerza [amount] (0..1). Tapa más del lado de [from] —donde van el
+ * nombre, los servicios y el precio— y menos del otro. Es el mismo velo del
+ * panel (`hsPhotoFadeGradients`), así el texto resalta igual en los dos lados.
  *
  * Los dos degradados van en la MISMA capa para que la foto quede debajo: uno
- * vertical (de arriba abajo) y otro en diagonal (de izquierda a derecha).
+ * vertical (de arriba abajo o de abajo arriba) y otro de izquierda a derecha.
  */
-function hsPhotoFade(dark, amount) {
+function hsPhotoFade(dark, amount, from) {
   const f = Math.round(Math.max(0, Math.min(1, amount)) * 100) / 100;
   const a = (x) => hsAlpha(dark, Math.round(Math.max(0, Math.min(1, x)) * 100) / 100);
+  const deg = String(from) === 'top' ? '0deg' : '180deg';
   return (
-    `linear-gradient(180deg,${a(f * .15)} 0%,${a(f * .5)} 45%,${a(f)} 100%),` +
-      `linear-gradient(95deg,${a(f * .78)} 0%,${a(f * .5)} 45%,${a(f * .1)} 100%)`
+    `linear-gradient(${deg},${a(f * .15)} 0%,${a(f * .6)} 50%,${a(f)} 100%),` +
+      `linear-gradient(95deg,${a(f * .55)} 0%,${a(f * .22)} 55%,${a(0)} 100%)`
   );
 }
 
@@ -522,32 +531,52 @@ function siteDesignCss(rawDesign) {
 
   // FOTO del paquete. La foto la pinta `renderers.js` (de los paquetes de la
   // web); aquí solo se decide DÓNDE va y cuánto se ve.
+  //
+  // Las reglas del VELO van al final (ver [later]): el color del pie de la
+  // tarjeta lo fijan los tiers, y esto tiene que ir DESPUÉS para mandar.
+  const later = [];
   const imageMode = String(c.imageMode || 'none');
   if (imageMode === 'top') {
     const h = Math.max(0, Number(c.imageHeight) || 0);
     r.push(`.pkg-photo{display:block;width:100%;height:${h}px;object-fit:cover;}`);
   } else if (imageMode === 'bg') {
     // La foto va a TODO color (sin `opacity`): el oscurecido lo pone el
-    // DEGRADADO NEGRO de encima (`.pkg-photo-bg::after`), así la foto se ve y
-    // el texto resalta. Es el MISMO velo que pone el panel (`hsPhotoFade` con
-    // negro), para que las dos tarjetas se vean igual.
+    // DEGRADADO de encima (`.pkg-photo-bg::after`), así la foto se ve y el
+    // texto resalta. Es el MISMO velo que pone el panel (`hsPhotoFade`), con
+    // su color y su dirección, para que las dos tarjetas se vean igual.
     r.push(
       '.pkg-photo-bg{position:absolute;inset:0;background-size:cover;' +
         'background-position:center;pointer-events:none;}'
     );
     r.push(
       ".pkg-photo-bg::after{content:'';position:absolute;inset:0;" +
-        `background:${hsPhotoFade(HS_PHOTO_FADE, hsPhotoFadeAmount(c.imageFade))};}`
+        `background:${hsPhotoFade(
+          hsPhotoFadeColor(c.imageFadeColor),
+          hsPhotoFadeAmount(c.imageFade),
+          c.imageFadeFrom
+        )};}`
     );
     // Con la foto de fondo, el contenido sube de capa para seguir leyéndose y
-    // el pie se apoya en un poco más de negro (en el panel también).
+    // el pie se apoya en un poco más del color del velo (en el panel también).
     r.push('.package-card>.pkg-flyer-inner{position:relative;z-index:1;}');
-    r.push(`.pkg-footer{background:${hsAlpha('#000000', 0.34)};}`);
+    later.push(
+      `.pkg-footer{background:${hsAlpha(
+        hsPhotoFadeColor(c.imageFadeColor),
+        0.34
+      )};}`
+    );
   }
 
-  // Forma, densidad y comportamiento
+  // Forma, densidad y comportamiento. El relleno y el pie son los MISMOS
+  // números que usa la tarjeta del panel (`WebPackageCard`): contenido con
+  // [pad] a los lados, pie a sangre completa.
+  const pad = Math.max(0, Number(c.padding) || 0);
   r.push(`.package-card{border-radius:${Number(c.radius) || 0}px;}`);
-  r.push(`.pkg-flyer-inner{padding:${Number(c.padding) || 0}px;}`);
+  r.push(
+    '.packages-grid>.package-card{width:100%;max-width:450px;justify-self:center;}'
+  );
+  r.push(`.pkg-flyer-inner{padding:14px ${pad}px 0;}`);
+  r.push(`.pkg-footer{margin:0 -${pad}px;padding:12px 20px;}`);
   r.push(`.pkg-name{font-family:${c.serifNames ? `'Playfair Display',serif` : `'Inter',sans-serif`};` +
     `text-transform:${c.uppercaseNames ? 'uppercase' : 'none'};` +
     `letter-spacing:${c.uppercaseNames ? '.06em' : '0'};}`);
@@ -617,17 +646,23 @@ function siteDesignCss(rawDesign) {
     r.push(`${k} .pkg-subtitle,${k} .pkg-description{color:${hsAlpha('#ffffff', 0.55)};}`);
     // El pie lleva un tinte del acento del tier (como el del panel).
     r.push(`${k} .pkg-footer{background:${hsAlpha(t.accent, 0.05)};}`);
+    // El CTA es la misma pastilla del panel: relleno con el tinte del acento,
+    // texto en el acento y sin MAYÚSCULAS ni borde.
     r.push(
-      `${k} .pkg-cta{color:${hsEsc(t.accentSoft)};border-color:${hsAlpha(t.accent, 0.75)};}`
+      `${k} .pkg-cta{background:${hsAlpha(t.accent, 0.18)};color:${hsEsc(t.accent)};` +
+        'border-color:transparent;}'
     );
+    r.push(`${k} .pkg-cta:hover{background:${hsAlpha(t.accent, 0.28)};}`);
     r.push(
       t.badgeFilled
         ? `${k} .pkg-tier-badge{background:linear-gradient(135deg,${hsEsc(t.accent)},${hsEsc(t.accentSoft)});` +
-          `color:${hsEsc(t.dark)};border-color:transparent;}`
+          `color:${hsEsc(t.dark)};border-color:transparent;box-shadow:none;}`
         : `${k} .pkg-tier-badge{background:${hsAlpha(t.accent, 0.12)};` +
-          `color:${hsEsc(t.accentSoft)};border-color:${hsAlpha(t.accent, 0.35)};}`
+          `color:${hsEsc(t.accentSoft)};border-color:${hsAlpha(t.accent, 0.35)};box-shadow:none;}`
     );
   }
+  // Las reglas que tienen que ganarle a las de los tiers (el pie sobre foto).
+  r.push(...later);
   return r.join('\n');
 }
 

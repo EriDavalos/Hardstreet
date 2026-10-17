@@ -53,7 +53,10 @@ test('sin diseño guardado se aplican los defaults (nada cambia)', () => {
   assert.match(css, /--gold-light:#F0D48A;/);
   assert.match(css, /grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(css, /\.package-card\{border-radius:18px;\}/);
-  assert.match(css, /\.pkg-flyer-inner\{padding:32px;\}/);
+  // El contenido lleva el relleno del diseño a los lados y el pie va a sangre
+  // completa (los MISMOS números que la tarjeta del panel).
+  assert.match(css, /\.pkg-flyer-inner\{padding:14px 32px 0;\}/);
+  assert.match(css, /\.pkg-footer\{margin:0 -32px;padding:12px 20px;\}/);
   // Ningún elemento del diseño arranca oculto.
   assert.doesNotMatch(css, /display:none/);
 });
@@ -66,7 +69,7 @@ test('un documento incompleto no rompe el diseño (se mezcla con los defaults)',
   assert.match(css, /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   // Lo que no vino, sigue con su valor de siempre.
   assert.match(css, /\.package-card\{border-radius:18px;\}/);
-  assert.match(css, /\.pkg-flyer-inner\{padding:32px;\}/);
+  assert.match(css, /\.pkg-flyer-inner\{padding:14px 32px 0;\}/);
 });
 
 // ------------------------------------------------------------------
@@ -91,7 +94,8 @@ test('el diseño de las tarjetas manda forma, densidad y textos', () => {
   assert.match(css, /grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
   assert.match(css, /\.packages-grid\{gap:12px;/);
   assert.match(css, /\.package-card\{border-radius:4px;\}/);
-  assert.match(css, /\.pkg-flyer-inner\{padding:10px;\}/);
+  assert.match(css, /\.pkg-flyer-inner\{padding:14px 10px 0;\}/);
+  assert.match(css, /\.pkg-footer\{margin:0 -10px;padding:12px 20px;\}/);
   assert.match(css, /\.pkg-name\{font-family:'Inter',sans-serif;/);
   assert.match(css, /text-transform:uppercase;/);
   assert.match(css, /\.package-card::before\{display:none !important;\}/);
@@ -171,14 +175,42 @@ test('la foto de fondo se ve a todo color y la oscurece el velo NEGRO', () => {
     /\.pkg-photo-bg::after\{content:'';position:absolute;inset:0;background:linear-gradient\(180deg,/
   );
   // El velo es NEGRO (el mismo que pone el panel) y `imageFade` manda cuánto
-  // tapa: abajo del todo tapa justo ese valor (0.8).
+  // tapa: del lado que tapa más (el final del degradado) tapa justo ese valor.
   assert.match(css, /rgba\(0, 0, 0, 0\.8\) 100%\)/);
   // Y NO cambia por tier: ya no hay un degradado propio de cada tarjeta.
   assert.doesNotMatch(css, /\.tier-\w+ \.pkg-photo-bg::after\{/);
   assert.doesNotMatch(css, /rgba\(11, 14, 23, 0\.8\) 100%\)/);
-  // Con la foto de fondo, el pie se apoya en un poco más de negro.
+  // Con la foto de fondo, el pie se apoya en un poco más del color del velo,
+  // y esa regla va DESPUÉS de la de los tiers (si no, el tier la pisaría).
   assert.match(css, /\.pkg-footer\{background:rgba\(0, 0, 0, 0\.34\);\}/);
+  assert.ok(
+    css.lastIndexOf('.pkg-footer{background:rgba(0, 0, 0, 0.34);}') >
+      css.lastIndexOf('.package-card.tier-basic .pkg-footer'),
+    'el pie sobre foto tiene que mandar sobre el tinte del tier'
+  );
   assert.match(css, /\.package-card>\.pkg-flyer-inner\{position:relative;z-index:1;\}/);
+});
+
+test('el degradado de la foto se puede personalizar (color y dirección)', () => {
+  // Color propio: el velo se pinta con ESE color, no con negro.
+  const azul = cssWith({
+    card: { imageMode: 'bg', imageFade: 1, imageFadeColor: '#1B2A4A' },
+  });
+  assert.match(azul, /rgba\(27, 42, 74, 1\) 100%\)/);
+  assert.doesNotMatch(azul, /rgba\(0, 0, 0, 1\) 100%\)/);
+
+  // Dirección: desde abajo (180deg, por defecto) o desde arriba (0deg).
+  assert.match(azul, /\.pkg-photo-bg::after\{content:'';position:absolute;inset:0;background:linear-gradient\(180deg,/);
+  const arriba = cssWith({
+    card: { imageMode: 'bg', imageFadeFrom: 'top', imageFade: 1 },
+  });
+  assert.match(arriba, /background:linear-gradient\(0deg,/);
+
+  // Un color inválido no rompe nada: cae al negro de siempre.
+  const raro = cssWith({
+    card: { imageMode: 'bg', imageFadeColor: 'no-es-color' },
+  });
+  assert.match(raro, /rgba\(0, 0, 0, 0\.7\) 100%\)/);
 });
 
 test('la tarjeta de la web se pinta como la del panel (mismas piezas y textos)', () => {
@@ -234,6 +266,30 @@ function pkgBase(extra = {}) {
     extra
   );
 }
+
+test('un paquete SIN foto se ve como la tarjeta del panel (sin foto de relleno)', () => {
+  const r = loadScript('gallery/assets/renderers.js');
+  // Con la foto de fondo pedida, un paquete sin `url_image` NO inventa una
+  // foto del pool: la tarjeta se pinta limpia, igual que en el panel.
+  r.window.HS_SITE_DESIGN = { card: { imageMode: 'bg' } };
+  const sin = r.renderPackageCard(pkgBase({ urlImage: '' }));
+  assert.doesNotMatch(sin, /pkg-photo-bg|pkg-photo"/);
+  assert.match(sin, /data-hs-photo=""/);
+  // Y con foto propia sí la pinta (es la suya, no una del sitio).
+  const con = r.renderPackageCard(pkgBase({ urlImage: 'images/suya.jpg' }));
+  assert.match(con, /background-image:url\('images\/suya\.jpg'\)/);
+});
+
+test('los servicios van con el MISMO check que la tarjeta del panel', () => {
+  const r = loadScript('gallery/assets/renderers.js');
+  r.window.HS_SITE_DESIGN = null;
+  const html = r.renderPackageCard(
+    pkgBase({ services: [{ name: 'Cobertura', iconSvg: '<svg id="icono-propio"></svg>' }] })
+  );
+  const item = html.slice(html.indexOf('<li>'), html.indexOf('</li>'));
+  assert.match(item, /<span class="pkg-icon-svg">.*<path d="M20 6 9 17l-5-5"\/>/s);
+  assert.doesNotMatch(item, /icono-propio/);
+});
 
 test('con la foto en banda (o sin foto) no se pinta ningún degradado de fondo', () => {
   const banda = cssWith({ card: { imageMode: 'top' } });

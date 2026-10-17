@@ -93,14 +93,19 @@ const TierLabels = { premium: 'Premium', gold: 'Gold', basic: 'Essentials' };
 
 // ========== PACKAGE CATEGORY ==========
 class PackageCategory {
-  constructor({ id = 0, name = 'General', icon = '' } = {}) {
+  constructor({ id = 0, name = 'General', icon = '', urlImage = '' } = {}) {
     this.id = id;
     this.name = name;   // 'Boda', 'XV Años'...
     this.icon = icon;   // 'icon/heart.svg' (reservado en BD)
+    // Foto que representa a la categoría (la elige el panel; puede ser del
+    // Drive). Vacía = la categoría usa la foto de su primer paquete.
+    this.urlImage = urlImage;
   }
   get key() { return categoryKey(this.name); }
   get iconSvg() { return categoryIcon(this.name); }
-  toObject() { return { id: this.id, name: this.name, icon: this.icon }; }
+  toObject() {
+    return { id: this.id, name: this.name, icon: this.icon, urlImage: this.urlImage };
+  }
 }
 
 // ========== STATUS ==========
