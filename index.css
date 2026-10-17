@@ -603,62 +603,52 @@ section[id] { scroll-margin-top: 84px; }
 }
 
 /* ========== PREMIUM TIER — Ultra Luxurious ========== */
+/* El tier Premium se ve como la tarjeta de referencia (y la del panel): borde
+   dorado FINO, badge en CONTORNO (no relleno ni animado) y CTA discreto. El
+   degradado relleno con destellos que tenía antes no aparece en la tarjeta que
+   se aprobó, y hacía que el mismo paquete se viera distinto en cada lado. */
 .tier-premium {
-  border: 2px solid transparent;
-  background-image: linear-gradient(var(--bg), var(--bg)), linear-gradient(135deg, var(--gold), var(--gold-light), var(--gold-dark), var(--gold));
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
+  border: 1px solid rgba(201, 169, 110, 0.5);
+  background: var(--bg);
   position: relative;
 }
 .tier-premium::before {
-  background: linear-gradient(90deg, var(--gold), var(--gold-light), var(--gold), var(--gold-light), var(--gold));
-  background-size: 200% 100%;
-  animation: premiumLine 2s linear infinite;
-  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  height: 2px;
 }
 .tier-premium::after {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(135deg, var(--gold), transparent, var(--gold-light), transparent, var(--gold));
-  z-index: -1;
-  opacity: 0.15;
-  animation: premiumGlow 3s ease-in-out infinite alternate;
-  filter: blur(10px);
+  content: none;
 }
 .tier-premium .pkg-tier-badge {
-  background: linear-gradient(135deg, #c9a96e, #f0d48a, #c9a96e);
-  background-size: 200% 100%;
-  color: var(--bg);
-  border: none;
+  background: rgba(201, 169, 110, 0.12);
+  color: var(--gold);
+  border: 1px solid rgba(201, 169, 110, 0.55);
   font-weight: 700;
-  animation: premiumBadge 2s ease-in-out infinite;
   letter-spacing: 2px;
-  box-shadow: 0 4px 15px rgba(201, 169, 110, 0.4);
+  animation: none;
+  box-shadow: none;
 }
 .tier-premium .pkg-name {
   color: #fff;
 }
 .tier-premium .pkg-price-value {
   color: var(--gold);
-  text-shadow: 0 0 20px rgba(201, 169, 110, 0.3);
+  text-shadow: none;
 }
 .tier-premium .pkg-cta {
-  background: linear-gradient(135deg, var(--gold), var(--gold-light));
-  color: var(--bg);
-  border: none;
+  background: rgba(201, 169, 110, 0.16);
+  color: var(--gold);
+  border: 1px solid transparent;
   font-weight: 600;
 }
 .tier-premium .pkg-cta:hover {
-  box-shadow: 0 10px 30px rgba(201, 169, 110, 0.4);
-  transform: translateY(-3px);
+  background: rgba(201, 169, 110, 0.26);
+  box-shadow: none;
+  transform: none;
 }
 .tier-premium:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 30px 60px rgba(201, 169, 110, 0.2), 0 0 50px rgba(201, 169, 110, 0.1);
+  transform: translateY(-6px);
+  box-shadow: 0 22px 45px rgba(0, 0, 0, 0.35);
 }
 
 /* Premium Animations */
