@@ -567,7 +567,8 @@ async function handleLogin(e) {
 
   try {
     await Store.login(email, password);
-    window.location.href = 'gallery/home/';
+    // Al entrar, se va a la APP (el panel en /me/), igual que el botón del menú.
+    window.location.href = APP_DIR;
   } catch (err) {
     const msg = err.status === 401
       ? 'Correo o contraseña incorrectos'
@@ -579,6 +580,15 @@ async function handleLogin(e) {
   return false;
 }
 
+/**
+ * Directorio de la APLICACIÓN (el panel, compilado como web en /me/).
+ *
+ * "Iniciar Sesión" NO abre un formulario en la página: entra a la app, que ya
+ * tiene su propio acceso. Así hay un solo lugar donde se inicia sesión y no dos
+ * que se puedan desincronizar.
+ */
+const APP_DIR = '/me/';
+
 function handleLogout() {
   Store.logout();
   updateAuthUI();
@@ -586,12 +596,14 @@ function handleLogout() {
 
 function updateAuthUI() {
   const authBtn = document.getElementById('authBtn');
+  if (!authBtn) return;
   if (Store.user) {
     authBtn.textContent = 'Mi Paquete';
-    authBtn.onclick = () => window.location.href = 'gallery/home/';
+    authBtn.setAttribute('href', 'gallery/home/');
   } else {
     authBtn.textContent = 'Iniciar Sesión';
-    authBtn.onclick = () => openModal('loginModal');
+    // Entrar = ir al directorio de la APP.
+    authBtn.setAttribute('href', APP_DIR);
   }
 }
 

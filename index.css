@@ -1671,6 +1671,9 @@ section[id] { scroll-margin-top: 84px; }
 
 /* ========== AUTH BUTTON ========== */
 .nav-auth-btn {
+  /* Ahora es un <a> (entra directo a la app en /me/), no un <button>. */
+  display: inline-block;
+  text-decoration: none;
   padding: 0.55rem 1.4rem;
   border: 1px solid transparent;
   background: linear-gradient(135deg, var(--gold), var(--gold-light));

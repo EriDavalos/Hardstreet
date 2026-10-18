@@ -651,6 +651,20 @@ test('los iconos heredados (icon/*.svg) siguen funcionando', () => {
   assert.match(models.resolveServiceIcon(''), /<svg/);
 });
 
+test('el "Iniciar Sesión" de la portada entra al directorio de la APP', () => {
+  // La página NO pide la contraseña: "entrar" es ir a la app (/me/), que ya
+  // tiene su propio acceso. Así no hay dos formularios que se desincronicen.
+  const html = readFileSync(join(root, 'index.html'), 'utf8');
+  assert.match(html, /id="authBtn" href="\/me\/">Iniciar Sesión/);
+  assert.match(html, /<a href="\/me\/" onclick="closeNav\(\)">Iniciar Sesión<\/a>/);
+  assert.doesNotMatch(html, /onclick="openModal\('loginModal'\); closeNav\(\);"/);
+
+  const js = readFileSync(join(root, 'index.js'), 'utf8');
+  assert.match(js, /const APP_DIR = '\/me\/';/);
+  // Y al iniciar sesión en el formulario de la portada también se va a la app.
+  assert.match(js, /window\.location\.href = APP_DIR;/);
+});
+
 test('las páginas que muestran servicios cargan la tipografía de iconos', () => {
   const pages = ['index.html', 'gallery/home/index.html', 'gallery/package/index.html', 'gallery/photos/index.html'];
   for (const page of pages) {

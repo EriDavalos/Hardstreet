@@ -38,9 +38,11 @@
       <li><a href="#packages" onclick="closeNav()">Paquetes</a></li>
       <li><a href="#testimonials" onclick="closeNav()">Opiniones</a></li>
       <li><a href="#contact" onclick="closeNav()">Contacto</a></li>
-      <li class="mobile-auth"><a href="#" onclick="openModal('loginModal'); closeNav();">Iniciar Sesión</a></li>
+      <!-- Entrar = al directorio de la APP (el panel, en /me/): la página no
+           pide la contraseña, la pide la app. -->
+      <li class="mobile-auth"><a href="/me/" onclick="closeNav()">Iniciar Sesión</a></li>
     </ul>
-    <button class="nav-auth-btn" id="authBtn" onclick="openModal('loginModal')">Iniciar Sesión</button>
+    <a class="nav-auth-btn" id="authBtn" href="/me/">Iniciar Sesión</a>
     <div class="nav-toggle" id="navToggle" onclick="toggleNav()">
       <span></span><span></span><span></span>
     </div>

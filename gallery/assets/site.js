@@ -67,6 +67,10 @@ const SITE_DESIGN_DEFAULT = {
     imageShadow: 0.55,
     imageShadowStart: 0.08,
     imageShadowEnd: 0.72,
+    // Posición de esa sombra en grados CSS: 0 = abajo (de siempre), 90 =
+    // izquierda, 180 = arriba, 270 = derecha. Así se mueve de lado el
+    // degradado sin tocar el velo.
+    imageShadowAngle: 0,
     // Entrada de las tarjetas del catálogo: 'up' | 'fade' | 'zoom' | 'none'.
     animMode: 'up',
     animMs: 600,
@@ -215,6 +219,19 @@ function hsCardNum(v, fallback) {
 function hsCardColor(v, fallback) {
   const s = String(v == null ? '' : v).trim();
   return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(s) ? s : fallback;
+}
+
+/**
+ * Ángulo CSS de la SOMBRA de la foto (`imageShadowAngle`).
+ *
+ * Mismo criterio que el panel (`hsShadowCssDeg`): 0 = abajo (de siempre), 90 =
+ * izquierda, 180 = arriba, 270 = derecha. Sin el campo o con basura se queda
+ * abajo, que es como se veía antes de poder moverla.
+ */
+function hsShadowCssDeg(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return 0;
+  return ((n % 360) + 360) % 360;
 }
 
 /**
@@ -654,12 +671,14 @@ function siteDesignCss(rawDesign) {
     const shadow = Math.max(0, Math.min(1, Number(c.imageShadow) || 0));
     if (shadow > 0) {
       // Dos puntos móviles (como las paradas de un degradado de Photoshop):
-      // desde abajo, negro sólido hasta `start` y apagado del todo en `end`.
+      // negro sólido hasta `start` y apagado del todo en `end`, entrando por
+      // el lado que diga `imageShadowAngle` (0° = abajo, como antes).
       const start = Math.max(0, Math.min(0.95, Number(c.imageShadowStart) || 0));
       const end = Math.max(start + 0.05, Math.min(1, Number(c.imageShadowEnd) || 0));
+      const deg = hsShadowCssDeg(c.imageShadowAngle);
       r.push(
         ".pkg-photo-bg::before{content:'';position:absolute;inset:0;" +
-          'background:linear-gradient(to top,' +
+          `background:linear-gradient(${deg}deg,` +
           `${hsAlpha('#000000', shadow)} 0%,` +
           `${hsAlpha('#000000', shadow)} ${(start * 100).toFixed(1)}%,` +
           `rgba(0,0,0,0) ${(end * 100).toFixed(1)}%);}`
@@ -688,9 +707,11 @@ function siteDesignCss(rawDesign) {
     if (shadowFade > 0) {
       const s0 = Math.max(0, Math.min(0.95, Number(c.imageShadowStart) || 0));
       const s1 = Math.max(s0 + 0.05, Math.min(1, Number(c.imageShadowEnd) || 0));
+      const deg = hsShadowCssDeg(c.imageShadowAngle);
       r.push(
         ".package-card::after{content:'';position:absolute;inset:0;" +
-          'pointer-events:none;z-index:0;background:linear-gradient(to top,' +
+          'pointer-events:none;z-index:0;' +
+          `background:linear-gradient(${deg}deg,` +
           `${hsAlpha('#000000', shadowFade)} 0%,` +
           `${hsAlpha('#000000', shadowFade)} ${(s0 * 100).toFixed(1)}%,` +
           `rgba(0,0,0,0) ${(s1 * 100).toFixed(1)}%);}`
