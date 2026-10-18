@@ -266,10 +266,31 @@ test('la sombra de la foto usa sus DOS paradas, como el panel', () => {
       imageShadowEnd: 0.8,
     },
   });
+  // Sin `imageShadowAngle` la sombra entra desde ABAJO (0deg, lo de siempre).
   assert.match(
     css,
-    /\.pkg-photo-bg::before\{content:'';position:absolute;inset:0;background:linear-gradient\(to top,rgba\(0, 0, 0, 0\.6\) 0%,rgba\(0, 0, 0, 0\.6\) 12\.0%,rgba\(0,0,0,0\) 80\.0%\);\}/
+    /\.pkg-photo-bg::before\{content:'';position:absolute;inset:0;background:linear-gradient\(0deg,rgba\(0, 0, 0, 0\.6\) 0%,rgba\(0, 0, 0, 0\.6\) 12\.0%,rgba\(0,0,0,0\) 80\.0%\);\}/
   );
+  // La POSICIÓN de la sombra se puede mover: 90 = entra desde la izquierda.
+  const movida = cssWith({
+    card: {
+      imageMode: 'bg',
+      imageFade: 0,
+      imageShadow: 0.6,
+      imageShadowStart: 0.12,
+      imageShadowEnd: 0.8,
+      imageShadowAngle: 90,
+    },
+  });
+  assert.match(
+    movida,
+    /\.pkg-photo-bg::before\{content:'';position:absolute;inset:0;background:linear-gradient\(90deg,/,
+  );
+  // Y en el estilo `fade` la misma sombra obedece el mismo ángulo.
+  const fade = cssWith({
+    card: { imageMode: 'fade', imageShadow: 0.5, imageShadowAngle: 270 },
+  });
+  assert.match(fade, /background:linear-gradient\(270deg,/);
   // Sin fuerza no se emite la capa (no hay sombra que pintar).
   const sin = cssWith({ card: { imageMode: 'bg', imageShadow: 0 } });
   assert.doesNotMatch(sin, /pkg-photo-bg::before/);
