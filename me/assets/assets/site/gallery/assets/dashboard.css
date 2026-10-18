@@ -615,11 +615,11 @@ button {
 }
 
 .stat-icon.progress {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.05));
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.2), rgba(20, 184, 166, 0.05));
 }
 
 .stat-icon.progress svg {
-  color: #a855f7;
+  color: #14b8a6;
 }
 
 .stat-content {
@@ -1651,7 +1651,7 @@ button {
 .photo-stat-label { font-size: 0.8rem; color: var(--text-muted); }
 .photo-overlay-top { display: flex; justify-content: flex-end; }
 .photo-session-badge { font-size: 0.55rem; letter-spacing: 0.5px; text-transform: uppercase; padding: 0.2rem 0.5rem; border-radius: 100px; font-weight: 600; }
-.photo-session-badge.previa { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+.photo-session-badge.previa { background: rgba(20, 184, 166, 0.2); color: #14b8a6; }
 .photo-session-badge.fiesta { background: rgba(201, 169, 110, 0.2); color: var(--gold); }
 .photo-overlay-bottom { display: flex; flex-direction: column; gap: 0.15rem; }
 .photo-preview-btn { position: absolute; top: 0.75rem; left: 0.75rem; width: 28px; height: 28px; border-radius: 50%; background: rgba(0, 0, 0, 0.5); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: all 0.3s ease; }
@@ -1669,7 +1669,7 @@ button {
 .preview-image-wrap img { max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: var(--radius-md); }
 .preview-info { width: 280px; flex-shrink: 0; color: #fff; }
 .preview-session-badge { display: inline-block; font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; padding: 0.3rem 0.7rem; border-radius: 100px; font-weight: 600; margin-bottom: 1rem; }
-.preview-session-badge.previa { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+.preview-session-badge.previa { background: rgba(20, 184, 166, 0.2); color: #14b8a6; }
 .preview-session-badge.fiesta { background: rgba(201, 169, 110, 0.2); color: var(--gold); }
 .preview-info h3 { font-family: 'Playfair Display', serif; font-size: 1.4rem; margin-bottom: 0.5rem; }
 .preview-counter { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1.5rem; }
