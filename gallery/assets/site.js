@@ -681,6 +681,21 @@ function siteDesignCss(rawDesign) {
     r.push(`.pkg-photo-bg{-webkit-mask-image:${mask};mask-image:${mask};}`);
     // El contenido va por encima de la foto (y de su degradado de fondo).
     r.push('.package-card>.pkg-flyer-inner{position:relative;z-index:1;}');
+    // SOMBRA NEGRA sobre la foto, igual que en el diseñador: va en el ::after
+    // de la tarjeta (el ::before es la línea dorada) y por debajo del
+    // contenido, que ya tiene z-index 1. En este estilo también se ajusta.
+    const shadowFade = Math.max(0, Math.min(1, Number(c.imageShadow) || 0));
+    if (shadowFade > 0) {
+      const s0 = Math.max(0, Math.min(0.95, Number(c.imageShadowStart) || 0));
+      const s1 = Math.max(s0 + 0.05, Math.min(1, Number(c.imageShadowEnd) || 0));
+      r.push(
+        ".package-card::after{content:'';position:absolute;inset:0;" +
+          'pointer-events:none;z-index:0;background:linear-gradient(to top,' +
+          `${hsAlpha('#000000', shadowFade)} 0%,` +
+          `${hsAlpha('#000000', shadowFade)} ${(s0 * 100).toFixed(1)}%,` +
+          `rgba(0,0,0,0) ${(s1 * 100).toFixed(1)}%);}`
+      );
+    }
   }
 
   // Forma, densidad y comportamiento. El relleno del pie es el MISMO que usa

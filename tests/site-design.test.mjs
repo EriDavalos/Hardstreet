@@ -463,6 +463,28 @@ test('con la foto en banda (o sin foto) no se pinta ningún degradado de fondo',
   assert.doesNotMatch(sin, /pkg-photo-bg|pkg-photo-empty|pkg-photo-fade/);
 });
 
+test('la SOMBRA NEGRA de la foto se ajusta también con el fondo degradado', () => {
+  // En el estilo `fade` la sombra va en el ::after de la tarjeta (el ::before
+  // es la línea dorada) y respeta la fuerza y las DOS paradas del diseño.
+  const css = cssWith({
+    card: {
+      imageMode: 'fade',
+      imageShadow: 0.5,
+      imageShadowStart: 0.2,
+      imageShadowEnd: 0.9,
+    },
+  });
+  const rule = css.match(/\.package-card::after\{[^}]*\}/);
+  assert.ok(rule, 'la sombra del estilo degradado no se pinta');
+  assert.match(rule[0], /rgba\(0,\s*0,\s*0,\s*0\.5\) 0%/);
+  assert.match(rule[0], /rgba\(0,\s*0,\s*0,\s*0\.5\) 20\.0%/);
+  assert.match(rule[0], /rgba\(0,0,0,0\) 90\.0%/);
+
+  // Sin sombra, no se emite nada.
+  const none = cssWith({ card: { imageMode: 'fade', imageShadow: 0 } });
+  assert.doesNotMatch(none, /\.package-card::after\{content:'';position:absolute/);
+});
+
 test('un modo de foto desconocido cae a "sin foto"', () => {
   const css = cssWith({ card: { imageMode: 'flotante' } });
   assert.doesNotMatch(css, /pkg-photo/);
