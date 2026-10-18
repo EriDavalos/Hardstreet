@@ -287,3 +287,69 @@ test('index.js deja que el panel manda: galería, paquetes y testimonios', () =>
   // Y el carrusel de testimonios se puede volver a enganchar.
   assert.match(indexJs, /window\.HSInitTestimonials = initTestimonials/);
 });
+
+// ------------------------------------------------------------------
+// 4. HTML propio de cada sección (lo escribe el módulo "Sitio web")
+// ------------------------------------------------------------------
+
+test('el HTML propio viaja en el plan y la sección lo pinta TAL CUAL', () => {
+  const ctx = { window: {}, console };
+  vm.createContext(ctx);
+  vm.runInContext(
+    readFileSync(join(root, 'gallery/assets/site.js'), 'utf8'),
+    ctx
+  );
+  const H = ctx.window.HSSite;
+
+  const plan = H.plan({
+    html: {
+      hero: '<div class="hero-content"><h1>Hecho a mano</h1></div>',
+      about: '   ', // vacío: se descarta (la web arma la sección)
+    },
+  });
+  assert.deepEqual(plain(plan.html), {
+    hero: '<div class="hero-content"><h1>Hecho a mano</h1></div>',
+  });
+
+  // DOM mínimo: sólo existen dos secciones.
+  const nodes = {
+    hero: { innerHTML: '<h1>original</h1>' },
+    about: { innerHTML: '<p>original</p>' },
+  };
+  ctx.document = {
+    querySelector(sel) {
+      const m = /^\[data-hs-section="(.+)"\]$/.exec(sel);
+      return (m && nodes[m[1]]) || null;
+    },
+  };
+
+  // Sólo se toca la sección que tiene HTML propio (y que existe).
+  assert.equal(H.applyHtml(plan), 1);
+  assert.equal(nodes.hero.innerHTML, plan.html.hero);
+  assert.equal(nodes.about.innerHTML, '<p>original</p>');
+
+  // Es idempotente: aplicar el documento otra vez deja lo mismo.
+  assert.equal(H.applyHtml(plan), 1);
+  assert.equal(nodes.hero.innerHTML, plan.html.hero);
+});
+
+test('una copia agregada lleva su propio HTML', () => {
+  const plan = HSSite.plan({
+    extraSections: [
+      {
+        id: 'gallery-2',
+        key: 'gallery',
+        visible: true,
+        order: 2,
+        html: '<div class="packages-grid" data-copy="1"></div>',
+      },
+    ],
+  });
+  assert.equal(plan.extras.length, 1);
+  assert.equal(
+    plan.extras[0].html,
+    '<div class="packages-grid" data-copy="1"></div>'
+  );
+  // El HTML de una copia no se cuela en el mapa de las secciones de fábrica.
+  assert.deepEqual(plain(plan.html), {});
+});

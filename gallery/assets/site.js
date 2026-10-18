@@ -535,6 +535,8 @@ function siteContentPlan(rawLanding) {
   return {
     texts: l.texts || {},
     images: l.images || {},
+    // HTML propio por sección (lo escribe el módulo Sitio web).
+    html: hsCleanHtml(l.html),
     layout,
     sections,
     extras,
@@ -579,7 +581,19 @@ function hsExtraSections(rawLanding) {
       texts: hsCleanMap(e.texts),
       images: hsCleanMap(e.images),
       props: e.props && typeof e.props === 'object' ? e.props : {},
+      html: String(e.html == null ? '' : e.html).trim(),
     });
+  }
+  return out;
+}
+
+/** HTML por sección: texto sin vacíos (se pinta tal cual con innerHTML). */
+function hsCleanHtml(v) {
+  const out = {};
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return out;
+  for (const [k, value] of Object.entries(v)) {
+    const code = String(value == null ? '' : value).trim();
+    if (k && code) out[k] = code;
   }
   return out;
 }
@@ -932,6 +946,9 @@ function applySiteContent(rawLanding) {
   // Las secciones AGREGADAS: se levantan DESPUÉS de que las de fábrica tengan
   // su contenido, así la copia nace con lo mismo y luego se le aplica lo suyo.
   applyExtraSections(plan);
+  // El HTML propio va AL FINAL: reemplaza lo que se armó con los campos y los
+  // datos, tanto en las secciones de fábrica como en las copias.
+  applySectionHtml(plan);
   // El orden va al final: tiene que ver también a las copias.
   applySectionOrder(plan.layout);
   return plan;
@@ -1171,6 +1188,39 @@ function hsApplyInstanceContent(root, ex) {
   applyGalleryContent(sub, root);
   applyTestimonials(sub, root);
   applyWhatsapp(sub, root);
+  // El HTML propio de la copia manda sobre todo lo anterior.
+  if (ex.html) root.innerHTML = ex.html;
+}
+
+/**
+ * Pinta el HTML PROPIO de cada sección (módulo "Sitio web").
+ *
+ * Se reemplaza el CONTENIDO de la sección (no la etiqueta `<section>`), así se
+ * conservan su id, sus clases, el orden y el mostrar/ocultar; el CSS del sitio
+ * sigue aplicando igual. Es idempotente: aplicar el documento otra vez deja lo
+ * mismo. Las secciones sin HTML propio no se tocan.
+ */
+function applySectionHtml(plan) {
+  if (typeof document === 'undefined') return 0;
+  const map = plan.html || {};
+  let n = 0;
+  for (const [id, code] of Object.entries(map)) {
+    const el = document.querySelector(`[data-hs-section="${id}"]`);
+    if (!el || !code) continue;
+    el.innerHTML = String(code);
+    // Las animaciones de entrada del HTML propio: el observador del sitio ya
+    // corrió al cargar la página, así que los `.reveal` nuevos hay que
+    // volver a observarlos (si no, se quedarían invisibles).
+    if (typeof window !== 'undefined' && window.HSRevealObserver) {
+      el.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach((node) => {
+        if (!node.classList.contains('active')) {
+          window.HSRevealObserver.observe(node);
+        }
+      });
+    }
+    n++;
+  }
+  return n;
 }
 
 /**
@@ -1393,6 +1443,7 @@ window.HSSite = {
   extraSections: hsExtraSections,
   extraPlan: extraSectionPlan,
   applyExtras: applyExtraSections,
+  applyHtml: applySectionHtml,
   galleryFiltersHtml,
   testimonialsHtml,
   groupPackages,
