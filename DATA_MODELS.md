@@ -255,7 +255,7 @@ El frontend ya **no tiene datos demo ni fallback local**: todo viene del backend
 |---|---|---|
 | `packages` | `Package` | + `services` vía `packages_services` |
 | `purchased_packages` | `PurchasedPackage` | + `package` heredado + `services` vía `purchased_packages_services`; `drive_path` sigue siendo la PRIMERA carpeta compartida (compatibilidad) |
-| `purchased_packages_drive` | (carpetas compartidas) | VARIAS carpetas del Drive por paquete; el Drive del cliente solo muestra estas |
+| `users_drive` | (carpetas compartidas) | Carpetas del Drive que ve CADA USUARIO (`id_user`, `path`, `active`; `UNIQUE (id_user, path)`). La carpeta de un paquete vive en `purchased_packages.drive_path` y al compartirla se copia aquí a sus clientes; el Drive del cliente solo muestra las activas |
 | `purchased_packages_services` | `PurchasedPackageService` | + `service` + `status` resueltos; `finished_at` = cierre del servicio |
 | `purchased_packages_services_shares` | (compartir por servicio) | `folder` y/o `link` que se comparten con el cliente para ESE servicio del paquete |
 | `purchased_packages_services_items` | (selección del cliente) | una fila por ruta del Drive que el CLIENTE marcó para ese servicio; nada se mueve ni se copia |
