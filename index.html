@@ -36,7 +36,10 @@
         frame.id = 'hsInvitationFrame';
         frame.title = 'Invitación';
         frame.setAttribute('allow', 'autoplay; fullscreen');
-        frame.src = base + '/api/invitations/public?slug=' + encodeURIComponent(code);
+        // `v` evita que un iframe cacheado siga mostrando el HTML anterior;
+        // la API ignora el parámetro y sirve el guardado más reciente.
+        frame.src = base + '/api/invitations/public?slug=' +
+          encodeURIComponent(code) + '&v=' + Date.now();
         document.body.appendChild(frame);
       });
     })();
