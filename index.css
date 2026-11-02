@@ -2187,3 +2187,18 @@ img.hs-img-low {
   transform: scale(1.04);
   transition: filter 0.5s ease, transform 0.5s ease;
 }
+
+
+/* ==================================================================
+   INVITACIÓN COMPARTIDA (?invitation=CODIGO)
+   ==================================================================
+   La liga del panel es la del sitio con el código (ver index.html). En
+   Vercel la ruta se reescribe al HTML de la invitación; cuando el HTML se
+   muestra dentro de la página (respaldo local), la landing se oculta y
+   solo queda el iframe. */
+html.hs-invitation body > *:not(#hsInvitationFrame) { display: none !important; }
+html.hs-invitation body { overflow: hidden; background: #0a0a0a; }
+#hsInvitationFrame {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  border: 0; background: #0a0a0a; z-index: 9999;
+}

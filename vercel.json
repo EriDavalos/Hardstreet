@@ -1,6 +1,11 @@
 {
   "rewrites": [
     {
+      "source": "/",
+      "has": [{ "type": "query", "key": "invitation" }],
+      "destination": "https://apihardstreet.vercel.app/api/invitations/public"
+    },
+    {
       "source": "/ReynaCoot",
       "destination": "/ReynaCoot/"
     }

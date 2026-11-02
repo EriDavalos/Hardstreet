@@ -11,6 +11,36 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="index.css?v=6" />
+  <script>
+    // ================================================================
+    // ?invitation=CODIGO -> la web es el visor de ESA invitación
+    // ================================================================
+    // La liga que comparte el panel es la del sitio con el código:
+    //   https://<sitio>/?invitation=abc123
+    // Si Vercel aplica el rewrite de vercel.json, la invitación llega
+    // directamente y este bloque no se ejecuta. Cuando el rewrite no está
+    // activo (sitio estático, local o un despliegue viejo) se oculta la
+    // landing y se muestra la invitación a pantalla completa en un iframe
+    // (el HTML es un documento completo). El API va absoluto para que la
+    // liga funcione aunque el sitio no comparta dominio con el backend.
+    (function () {
+      var code = new URLSearchParams(location.search).get('invitation');
+      if (!code) return;
+      document.documentElement.classList.add('hs-invitation');
+      document.addEventListener('DOMContentLoaded', function () {
+        // config.js define la URL real; el valor absoluto es el respaldo
+        // para que nunca se pida /api/... al dominio del sitio estático.
+        var base = (window.HARDSTREET_API_URL || 'https://apihardstreet.vercel.app')
+          .replace(/\/+$/, '');
+        var frame = document.createElement('iframe');
+        frame.id = 'hsInvitationFrame';
+        frame.title = 'Invitación';
+        frame.setAttribute('allow', 'autoplay; fullscreen');
+        frame.src = base + '/api/invitations/public?slug=' + encodeURIComponent(code);
+        document.body.appendChild(frame);
+      });
+    })();
+  </script>
 </head>
 <body>
 
